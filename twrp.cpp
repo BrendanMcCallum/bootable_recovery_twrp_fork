@@ -201,7 +201,8 @@ int main(int argc, char **argv) {
 					LOGERR("argument error specifying zip file\n");
 			} else if (*argptr == 'w') {
 				if (len == 9)
-					Factory_Reset = true;
+					//xdajog: disabled to be able to start TWRP when factory reset was pressed
+					Factory_Reset = false;
 				else if (len == 10)
 					Cache_Wipe = true;
 			} else if (*argptr == 'n') {

@@ -785,7 +785,8 @@ void DataManager::SetDefaultValues()
 	mValues.insert(make_pair("tw_screen_timeout_secs", make_pair("0", 1)));
 	mValues.insert(make_pair("tw_no_screen_timeout", make_pair("1", 1)));
 #else
-	mValues.insert(make_pair("tw_screen_timeout_secs", make_pair("60", 1)));
+	//xdajog: changed from 60 to 10 because of adb bug
+	mValues.insert(make_pair("tw_screen_timeout_secs", make_pair("10", 1)));
 	mValues.insert(make_pair("tw_no_screen_timeout", make_pair("0", 1)));
 #endif
 	mValues.insert(make_pair("tw_gui_done", make_pair("0", 0)));
