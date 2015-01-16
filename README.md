@@ -1,3 +1,6 @@
+# bootable_recovery_twrp_fx3q
+TWRP for the LG F3Q 
+
 Details:
 http://forum.xda-developers.com/showthread.php?t=2867339
 
