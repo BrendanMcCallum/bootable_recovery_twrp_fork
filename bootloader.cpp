@@ -280,13 +280,25 @@ get_args(int *argc, char ***argv) {
             (*argv)[0] = strdup(arg);
             for (*argc = 1; *argc < MAX_ARGS; ++*argc) {
                 if ((arg = strtok(NULL, "\n")) == NULL) break;
+            LOGI("\targc: %i\n", *argc);
+
+                //trick to remove --wipe_data from rom command 
+                if (!strcmp(arg, "--wipe_data")) { 
+                    **argv = *""; //empty arg, really important, segfault under specific circumstances if not
+                    *argc = *argc -1; //revert arg: here is the trick
+                    LOGI("\t-1\n");
+                    continue; //dont go through the end of the for loop
+                }
+
                 (*argv)[*argc] = strdup(arg);
+                LOGI("\targ: %s\n", arg);
             }
             LOGI("Got arguments from boot message\n");
         } else if (boot.recovery[0] != 0 && boot.recovery[0] != 255) {
             LOGE("Bad boot message\n\"%.20s\"\n", boot.recovery);
         }
     }
+    LOGI("intermediate: argc: %i, argv: %s\n", *argc, **argv); 
 
     // --- if that doesn't work, try the command file
     if (*argc <= 1) {
