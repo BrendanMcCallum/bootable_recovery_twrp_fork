@@ -290,7 +290,7 @@ get_args(int *argc, char ***argv) {
 		#ifdef TW_IGNORE_BOOTLOADER_FACTORY_RESET
                 if (!strcmp(arg, "--wipe_data")) { 
                     (*argv)[*argc] = ""; //empty arg, really important, segfault under specific circumstances if not
-                    *argc = *argc -1; //revert arg: here is the trick
+                    *argc = *argc -1; //revert arg: removing unwanted arg from the list
                     LOGW("Bootloader arg \"%s\" ignored because TWRP was compiled with TW_IGNORE_BOOTLOADER_FACTORY_RESET\n", strdup(arg));
                     continue; //don't go through the end of the for loop
                 }
@@ -303,7 +303,6 @@ get_args(int *argc, char ***argv) {
             LOGE("Bad boot message\n\"%.20s\"\n", boot.recovery);
         }
     }
-    LOGI("intermediate: argc: %i, argv: %s\n", *argc, **argv); 
 
     // --- if that doesn't work, try the command file
     if (*argc <= 1) {
