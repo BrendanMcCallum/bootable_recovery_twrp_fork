@@ -270,6 +270,8 @@ get_args(int *argc, char ***argv) {
     if (boot.status[0] != 0 && boot.status[0] != 255) {
         LOGI("Boot status: %.*s\n", (int)sizeof(boot.status), boot.status);
     }
+    
+    LOGI("Arguments from bootloader: \"%s\"\n",boot.recovery);
 
     // --- if arguments weren't supplied, look in the bootloader control block
     if (*argc <= 1) {
@@ -280,18 +282,21 @@ get_args(int *argc, char ***argv) {
             (*argv)[0] = strdup(arg);
             for (*argc = 1; *argc < MAX_ARGS; ++*argc) {
                 if ((arg = strtok(NULL, "\n")) == NULL) break;
-            LOGI("\targc: %i\n", *argc);
 
-                //trick to remove --wipe_data from rom command 
+                LOGI("Bootloader arg count: %i\n", *argc);
+
+                 // if the device does not have an own recovery key combo we just want to open TWRP after
+                 // walking through the factory reset screen - without actually doing a factory reset
+		#ifdef TW_IGNORE_BOOTLOADER_FACTORY_RESET
                 if (!strcmp(arg, "--wipe_data")) { 
-                    **argv = *""; //empty arg, really important, segfault under specific circumstances if not
+                    (*argv)[*argc] = ""; //empty arg, really important, segfault under specific circumstances if not
                     *argc = *argc -1; //revert arg: here is the trick
-                    LOGI("\t-1\n");
-                    continue; //dont go through the end of the for loop
+                    LOGW("Bootloader arg \"%s\" ignored because TWRP was compiled with TW_IGNORE_BOOTLOADER_FACTORY_RESET\n", strdup(arg));
+                    continue; //don't go through the end of the for loop
                 }
-
+		#endif
                 (*argv)[*argc] = strdup(arg);
-                LOGI("\targ: %s\n", arg);
+                LOGI("Bootloader arg: %s\n", arg);
             }
             LOGI("Got arguments from boot message\n");
         } else if (boot.recovery[0] != 0 && boot.recovery[0] != 255) {
