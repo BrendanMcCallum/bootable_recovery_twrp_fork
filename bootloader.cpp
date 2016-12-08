@@ -31,7 +31,6 @@ extern "C" {
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <twcommon.h>
 
 // fake Volume struct that allows us to use the AOSP code easily
 struct Volume
@@ -272,11 +271,6 @@ get_args(int *argc, char ***argv) {
         LOGI("Boot status: %.*s\n", (int)sizeof(boot.status), boot.status);
     }
 
-// if the device do not have an own recovery key combo we want to open TWRP 
-// after walking through the factory reset screen - without actually doing a factory reset
-//#ifdef TW_IGNORE_BOOTLOADER_FACTORY_RESET
-    LOGINFO("Arguments from bootloader: \"%.20s\"\n", boot.recovery);
-//#else
     // --- if arguments weren't supplied, look in the bootloader control block
     if (*argc <= 1) {
         boot.recovery[sizeof(boot.recovery) - 1] = '\0';  // Ensure termination
@@ -284,24 +278,15 @@ get_args(int *argc, char ***argv) {
         if (arg != NULL && !strcmp(arg, "recovery")) {
             *argv = (char **) malloc(sizeof(char *) * MAX_ARGS);
             (*argv)[0] = strdup(arg);
-
-	    if (strcmp(boot.recovery,"wipe_data") < 0) {
-                LOGINFO("Arguments from bootloader ignored: \"%s\"\n", boot.recovery);
-            } else {
-		LOGINFO("Arguments from bootloader NOT ignored: \"%s\"\n", boot.recovery);
-/**                for (*argc = 1; *argc < MAX_ARGS; ++*argc) {
-                    if ((arg = strtok(NULL, "\n")) == NULL) break;
-                    (*argv)[*argc] = strdup(arg);
-                }
-**/
-            };
-
+            for (*argc = 1; *argc < MAX_ARGS; ++*argc) {
+                if ((arg = strtok(NULL, "\n")) == NULL) break;
+                (*argv)[*argc] = strdup(arg);
+            }
             LOGI("Got arguments from boot message\n");
         } else if (boot.recovery[0] != 0 && boot.recovery[0] != 255) {
             LOGE("Bad boot message\n\"%.20s\"\n", boot.recovery);
         }
     }
-//#endif
 
     // --- if that doesn't work, try the command file
     if (*argc <= 1) {
