@@ -287,11 +287,11 @@ get_args(int *argc, char ***argv) {
 
 // if the device does not have an own recovery key combo we just want to open TWRP after
 // walking through the factory reset screen - without actually doing a factory reset
-#ifdef TW_IGNORE_MISC_WIPE_DATA
+#ifdef IGNORE_MISC_WIPE_DATA
                 if (!strcmp(arg, "--wipe_data")) {
                     (*argv)[*argc] = "";
                     *argc = *argc -1;
-                    LOGI("Bootloader arg \"%s\" ignored because TWRP was compiled with TW_IGNORE_MISC_WIPE_DATA\n", strdup(arg));
+                    printf("Bootloader arg \"%s\" ignored because TWRP was compiled with TW_IGNORE_MISC_WIPE_DATA\n", strdup(arg));
                     continue;
                 }
 #endif
