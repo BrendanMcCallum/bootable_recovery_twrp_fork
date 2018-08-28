@@ -1231,7 +1231,7 @@ void TWPartitionManager::Set_Restore_Files(string Restore_Name) {
 
 			if (!Part->Is_SubPartition)
 				Restore_List += Part->Backup_Path + ";";
-			if (datamedia) {
+			if (datamedia && label == "data") {
 				SetDataMediaInfo(Restore_Name, label);
                                 DataManager::GetValue("tw_backup_has_datamedia", incl_dm);
                                 if (incl_dm == 1)
