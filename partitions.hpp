@@ -35,6 +35,7 @@ struct PartitionList {
 	std::string Display_Name;
 	std::string Mount_Point;
 	unsigned int selected;
+	unsigned int dmrestore;
 };
 
 struct Uevent_Block_Data {
