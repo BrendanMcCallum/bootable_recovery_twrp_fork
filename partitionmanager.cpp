@@ -1131,6 +1131,7 @@ void TWPartitionManager::Set_Restore_Files(string Restore_Name) {
 	string Restore_List;
 	bool get_date = true, check_encryption = true;
 	bool adbbackup = false;
+        int incl_dm = 0;
 
 	DataManager::SetValue("tw_restore_encrypted", 0);
 	if (twadbbu::Check_ADB_Backup_File(Restore_Name)) {
@@ -1230,8 +1231,12 @@ void TWPartitionManager::Set_Restore_Files(string Restore_Name) {
 
 			if (!Part->Is_SubPartition)
 				Restore_List += Part->Backup_Path + ";";
-			if (datamedia)
+			if (datamedia) {
 				SetDataMediaInfo(Restore_Name, label);
+                                DataManager::GetValue("tw_backup_has_datamedia", incl_dm);
+                                if (incl_dm == 1)
+                                    Restore_List += "Data_Media;";
+                        }
 		}
 		closedir(d);
 	}
@@ -2159,7 +2164,16 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 						Partition_List->push_back(part);
 					}
 				} else {
-					gui_msg(Msg(msg::kError, "restore_unable_locate=Unable to locate '{1}' partition for restoring.")(restore_path));
+                                        if (restore_path.compare("Data_Media") == 0) {
+                                            part.Display_Name = "Data (internal storage only)";
+                                            part.Mount_Point = "/data/media";
+                                            part.selected = 1;
+                                            part.dmrestore = 1;
+                                            DataManager::SetValue("tw_restore_datamedia", 1);
+                                            Partition_List->push_back(part);
+                                        } else {
+					    gui_msg(Msg(msg::kError, "restore_unable_locate=Unable to locate '{1}' partition for restoring.")(restore_path));
+                                        }
 				}
 				start_pos = end_pos + 1;
 				end_pos = Restore_List.find(";", start_pos);
