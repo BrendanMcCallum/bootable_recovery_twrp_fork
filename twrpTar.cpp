@@ -426,6 +426,7 @@ int twrpTar::createTarFork(pid_t *tar_fork_pid) {
 		// Parent side
 		unsigned long long fs, size_backup = 0, files_backup = 0, file_count = 0;
 		int first_data = 0;
+		int incl_dm = 0;
 
 		// Parent closes output side
 		close(progress_pipe[1]);
@@ -457,6 +458,7 @@ int twrpTar::createTarFork(pid_t *tar_fork_pid) {
 		DataManager::SetValue("tw_size_progress", "");
 		part_settings->progress->DisplayFileCount(false);
 		part_settings->progress->UpdateDisplayDetails(true);
+        	DataManager::GetValue("tw_backup_include_datamedia", incl_dm);
 
 		if (!part_settings->adbbackup) {
 			InfoManager backup_info(backup_folder + "/" + partition_name + ".info");
@@ -470,6 +472,7 @@ int twrpTar::createTarFork(pid_t *tar_fork_pid) {
 			else
 				backup_info.SetValue("backup_type", UNCOMPRESSED);
 			backup_info.SetValue("file_count", files_backup);
+			backup_info.SetValue("datamedia", incl_dm);
 			backup_info.SaveValues();
 		}
 #endif //ndef BUILD_TWRPTAR_MAIN

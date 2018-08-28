@@ -3074,6 +3074,9 @@
 			<listbox style="scrolllist">
 				<placement x="%indent%" y="%row3a_y%" w="%content_width%" h="%listbox_settings_height%"/>
 				<icon selected="checkbox_true" unselected="checkbox_false"/>
+				<listitem name="{@incl_media_backup_chk=Include internal storage on backup}">
+                                	<data variable="tw_backup_include_datamedia"/>
+				</listitem>
 				<listitem name="{@zip_sig_chk=Zip signature verification}">
 					<data variable="tw_signed_zip_verify"/>
 				</listitem>

@@ -1058,7 +1058,11 @@ void TWPartition::Setup_AndSec(void) {
 }
 
 void TWPartition::Setup_Data_Media() {
+	int incl_dm_bak;
+
 	LOGINFO("Setting up '%s' as data/media emulated storage.\n", Mount_Point.c_str());
+	DataManager::GetValue("tw_backup_include_datamedia", incl_dm_bak);
+
 	if (Storage_Name.empty() || Storage_Name == "Data")
 		Storage_Name = "Internal Storage";
 	Has_Data_Media = true;
@@ -1093,7 +1097,11 @@ void TWPartition::Setup_Data_Media() {
 			UnMount(true);
 		}
 	}
-	ExcludeAll(Mount_Point + "/media");
+	if (incl_dm_bak == 0) {
+		ExcludeAll(Mount_Point + "/media");
+	} else {
+		backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
+	}
 }
 
 void TWPartition::Find_Real_Block_Device(string& Block, bool Display_Error) {
@@ -2329,6 +2337,7 @@ bool TWPartition::Wipe_Data_Without_Wiping_Media_Func(const string& parent __unu
 bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_pid) {
 	string Full_FileName;
 	twrpTar tar;
+	int incl_dm = 0;
 
 	if (!Mount(true))
 		return false;
@@ -2355,7 +2364,8 @@ bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_p
 
 	Backup_FileName = Backup_Name + "." + Current_File_System + ".win";
 	Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
-	if (Has_Data_Media)
+        DataManager::GetValue("tw_backup_include_datamedia", incl_dm);
+	if (Has_Data_Media && incl_dm == 0)
 		gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any files in internal storage such as pictures or downloads.")(Display_Name));
 	tar.part_settings = part_settings;
 	tar.backup_exclusions = &backup_exclusions;

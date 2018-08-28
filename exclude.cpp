@@ -58,6 +58,16 @@ void TWExclude::add_absolute_dir(const string& dir) {
 	absolutedir.push_back(TWFunc::Remove_Trailing_Slashes(dir));
 }
 
+void TWExclude::clear_absolute_dir(string dir) {
+	vector<string>::iterator iter = absolutedir.begin();
+	while (iter != absolutedir.end()) {
+		if (*iter == dir)
+			iter = absolutedir.erase(iter);
+		else
+			iter++;
+	}
+}
+
 uint64_t TWExclude::Get_Folder_Size(const string& Path) {
 	DIR* d;
 	struct dirent* de;
