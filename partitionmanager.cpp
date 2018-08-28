@@ -2165,7 +2165,8 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 					}
 				} else {
                                         if (restore_path.compare("Data_Media") == 0) {
-                                            part.Display_Name = "Data (internal storage only)";
+                                            //part.Display_Name = "Data (internal storage only)";
+                                            part.Display_Name = "Internal Storage (overwrites pics, videos, ...)";
                                             part.Mount_Point = "/data/media";
                                             part.selected = 1;
                                             part.dmrestore = 1;
