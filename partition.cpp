@@ -2572,10 +2572,31 @@ unsigned long long TWPartition::Get_Restore_Size(PartitionSettings *part_setting
 	return Restore_Size;
 }
 
+unsigned long long TWPartition::Get_DataMediaInfo(PartitionSettings *part_settings) {
+	int incl_dm = 0;
+        if (!part_settings->adbbackup) {
+                InfoManager restore_info(part_settings->Backup_Folder + "/" + Backup_Name + ".info");
+                if (restore_info.LoadValues() == 0) {
+                        if (restore_info.GetValue("datamedia", incl_dm) == 0) {
+                                LOGINFO("Read info file, datamedia is %d\n", incl_dm);
+				DataManager::SetValue("tw_backup_has_datamedia", incl_dm);
+                                return incl_dm;
+                        }
+                }
+        }
+	return incl_dm;
+}
+
 bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 	string Full_FileName;
 	bool ret = false;
+	int include_datamedia = 0;
 	string Restore_File_System = Get_Restore_File_System(part_settings);
+
+	if (Has_Data_Media && Mount_Point == "/data")
+		include_datamedia = Get_DataMediaInfo(part_settings);
+			
+	LOGINFO("Backup includes data/media: %d\n", include_datamedia);
 
 	if (Has_Android_Secure) {
 		if (!Wipe_AndSec())

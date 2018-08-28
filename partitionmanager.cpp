@@ -1115,6 +1115,17 @@ int TWPartitionManager::Run_Restore(const string& Restore_Name) {
 	return true;
 }
 
+void TWPartitionManager::SetDataMediaInfo(string Backup_Folder, string Backup_Label) {
+        int incl_dm = 0;
+        InfoManager restore_info(Backup_Folder + "/" + Backup_Label + ".info");
+        if (restore_info.LoadValues() == 0) {
+        	if (restore_info.GetValue("datamedia", incl_dm) == 0) {
+                	LOGINFO("Read info file, datamedia is %d\n", incl_dm);
+                        DataManager::SetValue("tw_backup_has_datamedia", incl_dm);
+                }
+        }
+}
+
 void TWPartitionManager::Set_Restore_Files(string Restore_Name) {
 	// Start with the default values
 	string Restore_List;
@@ -1219,6 +1230,8 @@ void TWPartitionManager::Set_Restore_Files(string Restore_Name) {
 
 			if (!Part->Is_SubPartition)
 				Restore_List += Part->Backup_Path + ";";
+			if (datamedia)
+				SetDataMediaInfo(Restore_Name, label);
 		}
 		closedir(d);
 	}

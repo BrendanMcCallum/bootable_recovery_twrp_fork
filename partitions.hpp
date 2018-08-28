@@ -113,6 +113,7 @@ public:
 	bool Backup(PartitionSettings *part_settings, pid_t *tar_fork_pid);       // Backs up the partition to the folder specified
 	bool Restore(PartitionSettings *part_settings);                           // Restores the partition using the backup folder provided
 	unsigned long long Get_Restore_Size(PartitionSettings *part_settings);    // Returns the overall restore size of the backup
+	unsigned long long Get_DataMediaInfo(PartitionSettings *part_settings);   // Returns if the backup included data/media
 	string Backup_Method_By_Name();                                           // Returns a string of the backup method for human readable output
 	bool Decrypt(string Password);                                            // Decrypts the partition, return 0 for failure and -1 for success
 	bool Wipe_Encryption();                                                   // Ignores wipe commands for /data/media devices and formats the original block device
@@ -285,6 +286,7 @@ public:
 	int Run_Restore(const string& Restore_Name);                              // Restores a backup
 	bool Write_ADB_Stream_Header(uint64_t partition_count);                   // Write ADB header over twrpbu FIFO
 	bool Write_ADB_Stream_Trailer();                                          // Write ADB trailer over twrpbu FIFO
+	void SetDataMediaInfo(string Backup_Folder, string Backup_Label);         // Used to read a backup file's info and set a variable if it includes data/media or not
 	void Set_Restore_Files(string Restore_Name);                              // Used to gather a list of available backup partitions for the user to select for a restore
 	int Wipe_By_Path(string Path);                                            // Wipes a partition based on path
 	int Wipe_By_Path(string Path, string New_File_System);                    // Wipes a partition based on path
