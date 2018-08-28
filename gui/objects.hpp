@@ -684,6 +684,7 @@ protected:
 protected:
 	std::vector<PartitionList> mList;
 	std::string ListType;
+	std::string hidedm;
 	std::string mVariable;
 	std::string selectedList;
 	std::string currentValue;

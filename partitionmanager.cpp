@@ -2031,6 +2031,13 @@ int TWPartitionManager::Partition_SDCard(void) {
 
 void TWPartitionManager::Get_Partition_List(string ListType, std::vector<PartitionList> *Partition_List) {
 	std::vector<TWPartition*>::iterator iter;
+        int incl_dm_bak;
+	int tw_hidedm;
+	int updatebackupstorage = 0;
+        DataManager::GetValue("tw_backup_include_datamedia", incl_dm_bak);
+        DataManager::GetValue("tw_hide_datamedia", tw_hidedm);
+        DataManager::GetValue("tw_updatebackupstorage", updatebackupstorage);
+
 	if (ListType == "mount") {
 		for (iter = Partitions.begin(); iter != Partitions.end(); iter++) {
 			if ((*iter)->Can_Be_Mounted) {
@@ -2042,26 +2049,54 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 			}
 		}
 	} else if (ListType == "storage") {
-		char free_space[255];
-		string Current_Storage = DataManager::GetCurrentStoragePath();
-		for (iter = Partitions.begin(); iter != Partitions.end(); iter++) {
-			if ((*iter)->Is_Storage) {
-				struct PartitionList part;
-				sprintf(free_space, "%llu", (*iter)->Free / 1024 / 1024);
-				part.Display_Name = (*iter)->Storage_Name + " (";
-				part.Display_Name += free_space;
-				part.Display_Name += "MB)";
-				part.Mount_Point = (*iter)->Storage_Path;
-				if ((*iter)->Storage_Path == Current_Storage)
-					part.selected = 1;
-				else
-					part.selected = 0;
-				Partition_List->push_back(part);
-			}
-		}
+                char free_space[255];
+                string Current_Storage = DataManager::GetCurrentStoragePath();
+
+		if (updatebackupstorage == 1) 
+			Current_Storage = DataManager::GetCurrentBackupStoragePath();
+
+                for (iter = Partitions.begin(); iter != Partitions.end(); iter++) {
+                        if ((*iter)->Is_Storage) {
+                            if ((*iter)->Storage_Name == "Internal Storage" && incl_dm_bak == 1 && tw_hidedm == 1 ) {
+                                // hide internal storage if requested
+                            } else {
+                                struct PartitionList part;
+                                sprintf(free_space, "%llu", (*iter)->Free / 1024 / 1024);
+                                part.Display_Name = (*iter)->Storage_Name + " (";
+                                part.Display_Name += free_space;
+                                part.Display_Name += "MB)";
+                                part.Mount_Point = (*iter)->Storage_Path;
+                                if ((*iter)->Storage_Path == Current_Storage) {
+                                        part.selected = 1;
+					if (updatebackupstorage == 1)
+						DataManager::SetBackupStorage(part.Mount_Point);
+				} else {
+                                        part.selected = 0;
+				}
+                                Partition_List->push_back(part);
+                            }
+                        }
+                }
 	} else if (ListType == "backup") {
 		char backup_size[255];
 		unsigned long long Backup_Size;
+		string cur_storage = DataManager::GetCurrentBackupStoragePath();
+		DataManager::SetBackupStorage(cur_storage); // update the gui
+	
+		if (datamedia) {
+                	TWPartition* Dat = Find_Partition_By_Path("/data");
+			TWPartition* Current_Storage = PartitionManager.Find_Partition_By_Path(cur_storage);
+                	if (Dat) {
+                        	LOGINFO("Re-evaluate datamedia setting.\n");
+                        	Dat->Setup_Data_Media();
+				Update_System_Details();
+                	}
+			if (incl_dm_bak == 1 && Current_Storage->Backup_Name == "data") {
+                 		DataManager::SetValue("tw_backupstorage_path", "/external_sd");
+				string New_Storage = DataManager::GetCurrentBackupStoragePath();
+                        	LOGINFO("Storage was internal. Reset to: %s\n", New_Storage.c_str());
+			}
+		}
 		for (iter = Partitions.begin(); iter != Partitions.end(); iter++) {
 			if ((*iter)->Can_Be_Backed_Up && !(*iter)->Is_SubPartition && (*iter)->Is_Present) {
 				struct PartitionList part;
