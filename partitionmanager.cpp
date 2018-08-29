@@ -2154,6 +2154,10 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 					Partition_List->push_back(part);
 					break;
 				}
+
+                                if (restore_path.compare("Data") == 0)
+                                    DataManager::SetValue("tw_restore_data_partition", 1);
+
 				if ((restore_part = Find_Partition_By_Path(restore_path)) != NULL) {
 					if ((restore_part->Backup_Name == "recovery" && !restore_part->Can_Be_Backed_Up) || restore_part->Is_SubPartition) {
 						// Don't allow restore of recovery (causes problems on some devices)
@@ -2166,14 +2170,13 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 					}
 				} else {
                                         if (restore_path.compare("Data_Media") == 0) {
-                                            //part.Display_Name = "Data (internal storage only)";
                                             part.Display_Name = "Internal Storage (overwrites pics, videos, ...)";
-                                            part.Mount_Point = "/data/media";
+                                            part.Mount_Point = "/data";
                                             part.selected = 1;
                                             part.dmrestore = 1;
                                             DataManager::SetValue("tw_restore_datamedia", 1);
                                             Partition_List->push_back(part);
-                                        } else {
+                                       } else {
 					    gui_msg(Msg(msg::kError, "restore_unable_locate=Unable to locate '{1}' partition for restoring.")(restore_path));
                                         }
 				}

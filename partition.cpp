@@ -1097,11 +1097,10 @@ void TWPartition::Setup_Data_Media() {
 			UnMount(true);
 		}
 	}
-	if (incl_dm_bak == 0) {
+	if (incl_dm_bak == 0) 
 		ExcludeAll(Mount_Point + "/media");
-	} else {
+	else 
 		backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
-	}
 }
 
 void TWPartition::Find_Real_Block_Device(string& Block, bool Display_Error) {
@@ -2592,6 +2591,8 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 	bool ret = false;
 	int include_datamedia = 0;
 	string Restore_File_System = Get_Restore_File_System(part_settings);
+        int data_set = 0;
+        int dm_set = 0;
 
 	if (Has_Data_Media && Mount_Point == "/data")
 		include_datamedia = Get_DataMediaInfo(part_settings);
@@ -2631,6 +2632,17 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 	if (!Password.empty())
 		tar.setpassword(Password);
 #endif
+
+        DataManager::GetValue("tw_restore_data_partition", data_set);
+        DataManager::GetValue("tw_restore_datamedia", dm_set);
+
+        if (data_set == 1 && dm_set == 1)
+	    backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // /data + datamedia
+        if (data_set == 1 && dm_set != 1)
+            ExcludeAll(Mount_Point + "/media"); // data without data/media
+        if (data_set != 1 && dm_set == 1)
+            DataManager::SetValue("tw_restore_datamedia_only", 1); //  data/media ONLY
+
 	part_settings->progress->SetPartitionSize(Get_Restore_Size(part_settings));
 	if (tar.extractTarFork() != 0)
 		ret = false;
