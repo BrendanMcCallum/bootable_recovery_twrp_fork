@@ -702,25 +702,17 @@ int twrpTar::Generate_TarList(string Path, std::vector<TarListStruct> *TarList, 
 
 int twrpTar::extractTar() {
 	char* charRootDir = (char*) tardir.c_str();
-        int dm_only = 0;
-        DataManager::GetValue("tw_restore_datamedia_only", dm_only);
+        //int dm_only = 0;
+        //DataManager::GetValue("tw_restore_datamedia_only", dm_only);
 
 	if (openTar() == -1)
 		return -1;
 
-        if (part_settings->Mount_Point == "/data" && dm_only == 1)
-            if (tar_extract_glob(t, "data/media", charRootDir) != 0) {
-                LOGINFO("Unable to extract tar file/dir from archive '%s'\n", tarfn.c_str());
-                gui_err("restore_error=Error during restore process (data/media).");
-                return -1;
-            }
-        } else {
-    	    if (tar_extract_all(t, charRootDir, &progress_pipe_fd) != 0) {
+    	if (tar_extract_all(t, charRootDir, &progress_pipe_fd) != 0) {
 		LOGINFO("Unable to extract tar archive '%s'\n", tarfn.c_str());
 		gui_err("restore_error=Error during restore process.");
 		return -1;
-	    }
-        }
+	}
 	if (tar_close(t) != 0) {
 		LOGINFO("Unable to close tar file\n");
 		gui_err("restore_error=Error during restore process.");
