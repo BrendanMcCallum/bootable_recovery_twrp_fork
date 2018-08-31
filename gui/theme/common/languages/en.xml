@@ -19,7 +19,8 @@
 		<string name="recovery">Recovery</string>
 		<string name="cache">Cache</string>
 		<string name="data">Data</string>
-		<string name="data_backup">Data</string>
+		<string name="data_backup">Data (excl. photos, videos, ...)</string>
+		<string name="datamedia_backup">Internal Storage (photos, videos, ...)</string>
 		<string name="sdcard">SD card</string>
 		<string name="internal">Internal Storage</string>
 		<string name="microsd">Micro SD card</string>
