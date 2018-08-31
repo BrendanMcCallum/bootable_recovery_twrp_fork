@@ -450,6 +450,8 @@ void TWPartitionManager::Output_Partition(TWPartition* Part) {
 		printf("   Backup_Name: %s\n", Part->Backup_Name.c_str());
 	if (!Part->Backup_Display_Name.empty())
 		printf("   Backup_Display_Name: %s\n", Part->Backup_Display_Name.c_str());
+	if (!Part->DM_Backup_Display_Name.empty())
+		printf("   DM_Backup_Display_Name: %s\n", Part->DM_Backup_Display_Name.c_str());
 	if (!Part->Backup_FileName.empty())
 		printf("   Backup_FileName: %s\n", Part->Backup_FileName.c_str());
 	if (!Part->Storage_Path.empty())
@@ -1036,11 +1038,20 @@ int TWPartitionManager::Run_Restore(const string& Restore_Name) {
 	}
 	gui_msg("calc_restore=Calculating restore details...");
 	DataManager::GetValue("tw_restore_selected", Restore_List);
+        LOGINFO("sfxdebug selected fucking partitions: %s\n", Restore_List.c_str());
 
 	if (!Restore_List.empty()) {
 		end_pos = Restore_List.find(";", start_pos);
 		while (end_pos != string::npos && start_pos < Restore_List.size()) {
 			restore_path = Restore_List.substr(start_pos, end_pos - start_pos);
+                        LOGINFO("sfxdebug restore_path: %s\n", restore_path.c_str());
+
+                        if (restore_path.compare("/data") == 0)
+                            DataManager::SetValue("tw_restore_data_partition", 1);
+
+                        if (restore_path.compare("/data/media") == 0)
+                            DataManager::SetValue("tw_restore_datamedia", 1);
+
 			part_settings.Part = Find_Partition_By_Path(restore_path);
 			if (part_settings.Part != NULL) {
 				if (part_settings.Part->Mount_Read_Only) {
@@ -1232,12 +1243,14 @@ void TWPartitionManager::Set_Restore_Files(string Restore_Name) {
 			if (!Part->Is_SubPartition)
 				Restore_List += Part->Backup_Path + ";";
 
+/**  sfxdebug
                         if (datamedia && strncmp(label, "data", 4) == 0) {
 				SetDataMediaInfo(Restore_Name, label);
                                 DataManager::GetValue("tw_backup_has_datamedia", incl_dm);
                                 if (incl_dm == 1)
-                                    Restore_List += "Data_Media;";
+                                    Restore_List += "/data/media;";
                         }
+**/
 		}
 		closedir(d);
 	}
@@ -1515,6 +1528,7 @@ void TWPartitionManager::Update_System_Details(void) {
 				DataManager::SetValue(TW_BACKUP_SYSTEM_SIZE, backup_display_size);
 			} else if ((*iter)->Mount_Point == "/data" || (*iter)->Mount_Point == "/datadata") {
 				data_size += (int)((*iter)->Backup_Size / 1048576LLU);
+				data_size += (int)((*iter)->Backup_Size_DM / 1048576LLU);
 			} else if ((*iter)->Mount_Point == "/cache") {
 				int backup_display_size = (int)((*iter)->Backup_Size / 1048576LLU);
 				DataManager::SetValue(TW_BACKUP_CACHE_SIZE, backup_display_size);
@@ -2051,6 +2065,7 @@ int TWPartitionManager::Partition_SDCard(void) {
 void TWPartitionManager::Get_Partition_List(string ListType, std::vector<PartitionList> *Partition_List) {
 	std::vector<TWPartition*>::iterator iter;
         int incl_dm_bak;
+        int dm_in_backup = 0;
 	int tw_hidedm;
 	int updatebackupstorage = 0;
         DataManager::GetValue("tw_backup_include_datamedia", incl_dm_bak);
@@ -2099,6 +2114,7 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 	} else if (ListType == "backup") {
 		char backup_size[255];
 		unsigned long long Backup_Size;
+		unsigned long long Backup_Size_DM;
 		string cur_storage = DataManager::GetCurrentBackupStoragePath();
 		DataManager::SetBackupStorage(cur_storage); // update the gui
 	
@@ -2128,6 +2144,16 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 							Backup_Size += (*subpart)->Backup_Size;
 					}
 				}
+                                if ((*iter)->Has_Data_Media) {
+                                    LOGINFO("sfxdebug preparing backup list with special DM flags\n");
+    				    sprintf(backup_size, "%llu", (*iter)->Backup_Size_DM / 1024 / 1024);
+				    part.Display_Name = (*iter)->DM_Backup_Display_Name + " (";
+				    part.Display_Name += backup_size;
+			    	    part.Display_Name += "MB)";
+				    part.Mount_Point = (*iter)->DM_Backup_Path;
+				    part.selected = 0;
+				    Partition_List->push_back(part);
+                                }
 				sprintf(backup_size, "%llu", Backup_Size / 1024 / 1024);
 				part.Display_Name = (*iter)->Backup_Display_Name + " (";
 				part.Display_Name += backup_size;
@@ -2141,7 +2167,10 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 		string Restore_List, restore_path;
 		TWPartition* restore_part = NULL;
 
+                DataManager::SetValue("tw_restore_datamedia", 0);
 		DataManager::GetValue("tw_restore_list", Restore_List);
+                DataManager::GetValue("tw_backup_has_datamedia", dm_in_backup);
+
 		if (!Restore_List.empty()) {
 			size_t start_pos = 0, end_pos = Restore_List.find(";", start_pos);
 			while (end_pos != string::npos && start_pos < Restore_List.size()) {
@@ -2155,9 +2184,6 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 					break;
 				}
 
-                                if (restore_path.compare("Data") == 0)
-                                    DataManager::SetValue("tw_restore_data_partition", 1);
-
 				if ((restore_part = Find_Partition_By_Path(restore_path)) != NULL) {
 					if ((restore_part->Backup_Name == "recovery" && !restore_part->Can_Be_Backed_Up) || restore_part->Is_SubPartition) {
 						// Don't allow restore of recovery (causes problems on some devices)
@@ -2165,20 +2191,14 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 					} else {
 						part.Display_Name = restore_part->Backup_Display_Name;
 						part.Mount_Point = restore_part->Backup_Path;
-						part.selected = 1;
+                                                if (restore_path.compare("/data/media") == 0)
+						    part.selected = 0;
+                                                else
+						    part.selected = 1;
 						Partition_List->push_back(part);
 					}
 				} else {
-                                        if (restore_path.compare("Data_Media") == 0) {
-                                            part.Display_Name = "Internal Storage (overwrites pics, videos, ...)";
-                                            part.Mount_Point = "/data";
-                                            part.selected = 1;
-                                            part.dmrestore = 1;
-                                            DataManager::SetValue("tw_restore_datamedia", 1);
-                                            Partition_List->push_back(part);
-                                       } else {
-					    gui_msg(Msg(msg::kError, "restore_unable_locate=Unable to locate '{1}' partition for restoring.")(restore_path));
-                                        }
+				    gui_msg(Msg(msg::kError, "restore_unable_locate=Unable to locate '{1}' partition for restoring.")(restore_path));
 				}
 				start_pos = end_pos + 1;
 				end_pos = Restore_List.find(";", start_pos);
@@ -2602,6 +2622,12 @@ void TWPartitionManager::Translate_Partition(const char* path, const char* resou
 			part->Display_Name = part->Display_Name + " - " + gui_lookup("data", "Data");
 			part->Storage_Name = part->Storage_Name + " - " + gui_lookup("adopted_storage", "Adopted Storage");
 		} else {
+                        if (strncmp(path,"/data",5) == 0){
+                            LOGINFO("sfxdebug about to set DM flags\n");
+	                    part->DM_Backup_Display_Name = "Internal Storage (photos, videos, ...)";
+	                    part->DM_Backup_Name = "datamedia_backup";
+	                    part->DM_Backup_Path = part->Symlink_Mount_Point;
+                        }
 			part->Display_Name = gui_lookup(resource_name, default_value);
 			part->Backup_Display_Name = gui_lookup(backup_name, backup_default);
 			if (part->Is_Storage)
@@ -2626,7 +2652,10 @@ void TWPartitionManager::Translate_Partition_Display_Names() {
 		Translate_Partition("/internal_sdcard", "sdcard", "SDCard", "sdcard", "SDCard");
 		Translate_Partition("/emmc", "sdcard", "SDCard", "sdcard", "SDCard");
 	} else {
-		Translate_Partition("/data", "data", "Data", "internal", "Internal Storage", "data_backup", "Data (excl. storage)");
+                Translate_Partition("/data", "data", "Data", "internal", "Internal Storage", "data_backup", "Data (excl. storage)");
+		// sfxdebug:
+		//Translate_Partition("/data", "data", "Data", "internaldata", "Internal App Storage", "data_backup", "Data (excl. internal storage)");
+		//Translate_Partition("/datamedia", "datamedia", "DataMedia", "internal", "Internal Storage", "datamedia_backup", "Internal Storage (overwrites pics, videos, ...)");
 	}
 	Translate_Partition("/external_sd", "microsd", "Micro SDCard", "microsd", "Micro SDCard", "data_backup", "Data (excl. storage)");
 	Translate_Partition("/external_sdcard", "microsd", "Micro SDCard", "microsd", "Micro SDCard", "data_backup", "Data (excl. storage)");
