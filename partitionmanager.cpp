@@ -450,8 +450,12 @@ void TWPartitionManager::Output_Partition(TWPartition* Part) {
 		printf("   Backup_Name: %s\n", Part->Backup_Name.c_str());
 	if (!Part->Backup_Display_Name.empty())
 		printf("   Backup_Display_Name: %s\n", Part->Backup_Display_Name.c_str());
+	if (!Part->DM_Backup_Name.empty())
+		printf("   DM_Backup_Name: %s\n", Part->DM_Backup_Name.c_str());
 	if (!Part->DM_Backup_Display_Name.empty())
 		printf("   DM_Backup_Display_Name: %s\n", Part->DM_Backup_Display_Name.c_str());
+	if (Part->DM_Backup_Size && Part->Backup_Name == "data")
+		printf("   DM_Backup_Size: %lld\n", Part->DM_Backup_Size);
 	if (!Part->Backup_FileName.empty())
 		printf("   Backup_FileName: %s\n", Part->Backup_FileName.c_str());
 	if (!Part->Storage_Path.empty())
