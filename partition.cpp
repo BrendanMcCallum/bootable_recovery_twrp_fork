@@ -1070,9 +1070,9 @@ void TWPartition::Setup_Data_Media() {
 	Storage_Path = Mount_Point + "/media";
 	Symlink_Path = Storage_Path;
 
-	//DM_Backup_Display_Name = "Internal Storage (photos, videos, ...)";
-	//DM_Backup_Name = "datamedia_backup";
-	//DM_Backup_Path = Symlink_Mount_Point;
+	DM_Backup_Display_Name = "DataMedia";
+	DM_Backup_Name = "datamedia";
+	DM_Backup_Path = Symlink_Path;
 
 	if (Mount_Point == "/data") {
 		Is_Settings_Storage = true;
@@ -1088,6 +1088,7 @@ void TWPartition::Setup_Data_Media() {
 			Symlink_Path = Storage_Path;
 			DataManager::SetValue(TW_INTERNAL_PATH, Mount_Point + "/media/0");
 			UnMount(true);
+		        ExcludeAll(Mount_Point + "/media/0/TWRP");
 		}
 		DataManager::SetValue("tw_has_internal", 1);
 		DataManager::SetValue("tw_has_data_media", 1);
@@ -1100,12 +1101,14 @@ void TWPartition::Setup_Data_Media() {
 			Storage_Path = Mount_Point + "/media/0";
 			Symlink_Path = Storage_Path;
 			UnMount(true);
+		        ExcludeAll(Mount_Point + "/media/0/TWRP");
 		}
 	}
-	if (incl_dm_bak == 0) 
-		ExcludeAll(Mount_Point + "/media");
-	else 
-		backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
+        // sfx: Is that still needed ??? Was needed before the separate datamedia way but now may be obsolete
+	//if (incl_dm_bak == 0) 
+	ExcludeAll(Mount_Point + "/media");
+	//else 
+	//	backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
 }
 
 void TWPartition::Find_Real_Block_Device(string& Block, bool Display_Error) {
@@ -2341,13 +2344,20 @@ bool TWPartition::Wipe_Data_Without_Wiping_Media_Func(const string& parent __unu
 bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_pid) {
 	string Full_FileName;
 	twrpTar tar;
-	int incl_dm = 0;
+	int sel_dm = 0;
 
 	if (!Mount(true))
 		return false;
 
-	TWFunc::GUI_Operation_Text(TW_BACKUP_TEXT, Backup_Display_Name, "Backing Up");
-	gui_msg(Msg("backing_up=Backing up {1}...")(Backup_Display_Name));
+	DataManager::GetValue("tw_backup_selected_datamedia", sel_dm);
+        LOGINFO("sfxdebug bak path: %s\n", part_settings->backup_path.c_str());
+        if (part_settings->backup_path == "/data/media"){
+	    TWFunc::GUI_Operation_Text(TW_BACKUP_TEXT, DM_Backup_Display_Name, "Backing Up");
+	    gui_msg(Msg("backing_up=Backing up {1}...")(DM_Backup_Display_Name));
+        } else {
+	    TWFunc::GUI_Operation_Text(TW_BACKUP_TEXT, Backup_Display_Name, "Backing Up");
+	    gui_msg(Msg("backing_up=Backing up {1}...")(Backup_Display_Name));
+        }
 
 	DataManager::GetValue(TW_USE_COMPRESSION_VAR, tar.use_compression);
 
@@ -2366,17 +2376,27 @@ bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_p
 	}
 #endif
 
-	Backup_FileName = Backup_Name + "." + Current_File_System + ".win";
+        if (part_settings->backup_path == "/data/media"){
+            LOGINFO("sfxdebug backup name: %s\n", DM_Backup_Name.c_str());
+	    Backup_FileName = DM_Backup_Name + "." + Current_File_System + ".win";
+	    backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
+	    tar.partition_name = DM_Backup_Name;
+	    tar.setdir(DM_Backup_Path);
+	    tar.setsize(DM_Backup_Size);
+        } else {
+            LOGINFO("sfxdebug backup name: %s\n", Backup_Name.c_str());
+	    Backup_FileName = Backup_Name + "." + Current_File_System + ".win";
+	    tar.partition_name = Backup_Name;
+	    ExcludeAll(Mount_Point + "/media");
+	    tar.setdir(Backup_Path);
+	    tar.setsize(Backup_Size);
+	    gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any files in internal storage such as pictures or downloads.")(Display_Name));
+        }
+        LOGINFO("Backup Filename: %s\n", Backup_FileName.c_str());
 	Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
-        DataManager::GetValue("tw_backup_include_datamedia", incl_dm);
-	if (Has_Data_Media && incl_dm == 0)
-		gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any files in internal storage such as pictures or downloads.")(Display_Name));
 	tar.part_settings = part_settings;
 	tar.backup_exclusions = &backup_exclusions;
-	tar.setdir(Backup_Path);
 	tar.setfn(Full_FileName);
-	tar.setsize(Backup_Size);
-	tar.partition_name = Backup_Name;
 	tar.backup_folder = part_settings->Backup_Folder;
 	if (tar.createTarFork(tar_fork_pid) != 0)
 		return false;
@@ -2394,10 +2414,9 @@ bool TWPartition::Backup_Image(PartitionSettings *part_settings) {
 	if (part_settings->adbbackup) {
 		Full_FileName = TW_ADB_BACKUP;
 		adb_file_name  = part_settings->Backup_Folder + "/" + Backup_FileName;
-	}
-	else
+	} else {
 		Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
-
+        }
 	part_settings->total_restore_size = Backup_Size;
 
 	if (part_settings->adbbackup) {
@@ -2722,6 +2741,7 @@ bool TWPartition::Restore_Image(PartitionSettings *part_settings) {
 
 bool TWPartition::Update_Size(bool Display_Error) {
 	bool ret = false, Was_Already_Mounted = false;
+        int incl_dm = 0;
 
 	Find_Actual_Block_Device();
 
@@ -2753,11 +2773,14 @@ bool TWPartition::Update_Size(bool Display_Error) {
 	if (Has_Data_Media) {
 		if (Mount(Display_Error)) {
 
-                        if (!DM_Backup_Path.empty()){
+		        ExcludeAll(Mount_Point + "/media/0/TWRP/BACKUPS");
+	                DataManager::GetValue("tw_backup_include_datamedia", incl_dm);
+                        LOGINFO("sfxdebug tw_backup_include_datamedia is: %d\n",incl_dm);
+                        if (Backup_Name == "data" && !DM_Backup_Path.empty() && incl_dm == 1){
 		            backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
 			    LOGINFO("sfxdebug trying to get folder size of: %s\n", DM_Backup_Path.c_str());
 			    Used = backup_exclusions.Get_Folder_Size(DM_Backup_Path);
-			    Backup_Size_DM = Used;
+			    DM_Backup_Size = Used;
 			    int bak = (int)(Used / 1048576LLU);
 			    int fre = (int)(Free / 1048576LLU);
 			    LOGINFO("DataMedia backup size is %iMB, free: %iMB.\n", bak, fre);

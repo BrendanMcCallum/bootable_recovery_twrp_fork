@@ -556,9 +556,10 @@ void DataManager::SetBackupFolder()
 	int updatebackupstorage = 0;
 	GetValue("tw_updatebackupstorage", updatebackupstorage);
 
-	if (updatebackupstorage == 1)
-			str = GetCurrentBackupStoragePath();
-
+	if (updatebackupstorage == 1){
+	    str = GetCurrentBackupStoragePath();
+	    LOGINFO("sfxdebug GetCurrentBackupStoragePath done\n");
+        }
 	TWPartition* partition = PartitionManager.Find_Partition_By_Path(str);
 	str += "/TWRP/BACKUPS/";
 
@@ -939,7 +940,11 @@ void DataManager::SetDefaultValues()
 #endif
 
         mData.SetValue("tw_enable_adb_backup", "0");
-	mPersist.SetValue("tw_backup_include_datamedia", TW_BACKUP_INCLUDE_DATA_MEDIA);
+	//mPersist.SetValue("tw_backup_include_datamedia", TW_BACKUP_INCLUDE_DATA_MEDIA);
+	mPersist.SetValue("tw_backup_include_datamedia", 1);
+    
+	//SetValue("tw_backup_include_datamedia", TW_BACKUP_INCLUDE_DATA_MEDIA);          // needed to make it available on first boot
+	mPersist.SetValue("tw_backup_selected_datamedia", 0);
 
 	pthread_mutex_unlock(&m_valuesLock);
 }

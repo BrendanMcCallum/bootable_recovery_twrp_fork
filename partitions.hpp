@@ -66,6 +66,7 @@ class TWPartition;
 struct PartitionSettings {                                                    // Settings for backup session
 	TWPartition* Part;                                                        // Partition to pass to the partition backup loop
 	std::string Backup_Folder;                                                // Path to restore folder
+	std::string backup_path;                                                // Path to restore folder
 	bool adbbackup;                                                           // tell the system we are backing up over adb
 	bool adb_compression;                                                     // 0 == uncompressed, 1 == compressed
 	bool generate_digest;                                                      // tell system to create digest for partitions
