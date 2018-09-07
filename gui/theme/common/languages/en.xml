@@ -19,7 +19,7 @@
 		<string name="recovery">Recovery</string>
 		<string name="cache">Cache</string>
 		<string name="data">Data</string>
-		<string name="data_backup">Data (excl. photos, videos, ...)</string>
+		<string name="data_backup">Data (apps, settings only)</string>
 		<string name="datamedia_backup">Internal Storage (photos, videos, ...)</string>
 		<string name="sdcard">SD card</string>
 		<string name="internal">Internal Storage</string>
@@ -540,6 +540,7 @@
 		<string name="no_andsec">No android secure partitions found.</string>
 		<string name="unable_to_locate">Unable to locate {1}.</string>
 		<string name="wiping_datamedia">Wiping internal storage -- /data/media...</string>
+		<string name="skip_wiping">Skip wiping internal storage -- /data/media...</string>
 		<string name="unable_to_mount">Unable to mount {1}</string>
 		<string name="unable_to_mount_internal">Unable to mount internal_storage</string>
 		<string name="unable_to_mount_storage">Unable to mount storage</string>

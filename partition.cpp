@@ -1070,7 +1070,7 @@ void TWPartition::Setup_Data_Media() {
 	Storage_Path = Mount_Point + "/media";
 	Symlink_Path = Storage_Path;
 
-	DM_Backup_Display_Name = "DataMedia";
+	DM_Backup_Display_Name = gui_lookup("datamedia_backup","Internal Storage (photos, videos, ...)");
 	DM_Backup_Name = "datamedia";
 	DM_Backup_Path = Symlink_Path;
 
@@ -1845,8 +1845,15 @@ bool TWPartition::Backup(PartitionSettings *part_settings, pid_t *tar_fork_pid) 
 }
 
 bool TWPartition::Restore(PartitionSettings *part_settings) {
-	TWFunc::GUI_Operation_Text(TW_RESTORE_TEXT, Display_Name, gui_parse_text("{@restoring_hdr}"));
-	LOGINFO("Restore filename is: %s/%s\n", part_settings->Backup_Folder.c_str(), Backup_FileName.c_str());
+        string cur_backup_name;
+        DataManager::GetValue("tw_cur_backup_name", cur_backup_name);
+
+        if (cur_backup_name == "datamedia")
+	    TWFunc::GUI_Operation_Text(TW_RESTORE_TEXT, DM_Backup_Display_Name, gui_parse_text("{@restoring_hdr}"));
+        else
+	    TWFunc::GUI_Operation_Text(TW_RESTORE_TEXT, Display_Name, gui_parse_text("{@restoring_hdr}"));
+
+	//LOGINFO("Restore filename is: %s/%s\n", part_settings->Backup_Folder.c_str(), Backup_FileName.c_str());
 
 	string Restore_File_System = Get_Restore_File_System(part_settings);
 
@@ -1862,6 +1869,10 @@ bool TWPartition::Restore(PartitionSettings *part_settings) {
 string TWPartition::Get_Restore_File_System(PartitionSettings *part_settings) {
 	size_t first_period, second_period;
 	string Restore_File_System;
+        string cur_backup_name;
+        DataManager::GetValue("tw_cur_backup_name", cur_backup_name);
+
+        //if (cur_backup_name == "datamedia")
 
 	// Parse backup filename to extract the file system before wiping
 	first_period = Backup_FileName.find(".");
@@ -2561,7 +2572,11 @@ bool TWPartition::Backup_Dump_Image(PartitionSettings *part_settings) {
 
 unsigned long long TWPartition::Get_Restore_Size(PartitionSettings *part_settings) {
 	if (!part_settings->adbbackup) {
-		InfoManager restore_info(part_settings->Backup_Folder + "/" + Backup_Name + ".info");
+                string cur_backup_name;
+                DataManager::GetValue("tw_cur_backup_name", cur_backup_name);
+
+		InfoManager restore_info(part_settings->Backup_Folder + "/" + cur_backup_name + ".info");
+                LOGINFO("sfxdebug restore size bla: %s\n", cur_backup_name.c_str());
 		if (restore_info.LoadValues() == 0) {
 			if (restore_info.GetValue("backup_size", Restore_Size) == 0) {
 				LOGINFO("Read info file, restore size is %llu\n", Restore_Size);
@@ -2617,16 +2632,19 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 	string Restore_File_System = Get_Restore_File_System(part_settings);
         int data_set = 0;
         int dm_set = 0;
+        string cur_backup_name;
+        DataManager::GetValue("tw_cur_backup_name", cur_backup_name);
 
-	if (Has_Data_Media && Mount_Point == "/data")
-		include_datamedia = Get_DataMediaInfo(part_settings);
-			
-	LOGINFO("Backup setting data/media include: %d\n", include_datamedia);
+	LOGINFO("sfxdebug cur backup name: %s\n", cur_backup_name.c_str());
 
 	if (Has_Android_Secure) {
 		if (!Wipe_AndSec())
 			return false;
 	} else {
+            if (cur_backup_name == "datamedia") {
+		gui_msg(Msg("skip_wiping=Skipping wiping {1}")(DM_Backup_Display_Name));
+                LOGINFO("Skipping wipe of Internal Storage.\n");
+            } else {
 		gui_msg(Msg("wiping=Wiping {1}")(Backup_Display_Name));
 		if (Has_Data_Media && Mount_Point == "/data" && Restore_File_System != Current_File_System) {
 			gui_msg(Msg(msg::kWarning, "datamedia_fs_restore=WARNING: This /data backup was made with {1} file system! The backup may not boot unless you change back to {1}.")(Restore_File_System));
@@ -2636,13 +2654,26 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 			if (!Wipe(Restore_File_System))
 				return false;
 		}
+            }
 	}
-	TWFunc::GUI_Operation_Text(TW_RESTORE_TEXT, Backup_Display_Name, gui_parse_text("{@restoring_hdr}"));
-	gui_msg(Msg("restoring=Restoring {1}...")(Backup_Display_Name));
+        if (cur_backup_name == "datamedia"){
+	    TWFunc::GUI_Operation_Text(TW_RESTORE_TEXT, DM_Backup_Display_Name, gui_parse_text("{@restoring_hdr}"));
+	    gui_msg(Msg("restoring=Restoring {1}...")(DM_Backup_Display_Name));
+        } else {
+	    TWFunc::GUI_Operation_Text(TW_RESTORE_TEXT, Backup_Display_Name, gui_parse_text("{@restoring_hdr}"));
+	    gui_msg(Msg("restoring=Restoring {1}...")(Backup_Display_Name));
+        }
 
 	// Remount as read/write as needed so we can restore the backup
 	if (!ReMount_RW(true))
 		return false;
+
+        Backup_Name = cur_backup_name;
+        //if (cur_backup_name == "datamedia"){
+	    //Backup_FileName = DM_Backup_Name + "." + Current_File_System + ".win";
+            //Backup_Name = DM_Backup_Name;
+        LOGINFO("sfxdebug backup name: %s\n", Backup_Name.c_str());
+        //}
 
 	Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
 	twrpTar tar;
@@ -2659,8 +2690,11 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 
         DataManager::GetValue("tw_restore_data_partition", data_set);
 	DataManager::GetValue("tw_restore_datamedia", dm_set);
-        tar.backup_exclusions->add_absolute_dir(Mount_Point + "/media"); // data + datamedia
+        LOGINFO("sfxdebug before excl\n");
+        //ExcludeAll(Mount_Point + "/media"); // data + datamedia
+        LOGINFO("sfxdebug after excl\n");
 
+/**
 	//part_settings->globonly = "false";
         if (data_set == 1 && dm_set == 1){
 	    LOGINFO("sfxdebug: data+datamedia\n");
@@ -2678,7 +2712,7 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 		}
 	    }
 	}
-
+**/
 	part_settings->progress->SetPartitionSize(Get_Restore_Size(part_settings));
 	if (tar.extractTarFork() != 0)
 		ret = false;

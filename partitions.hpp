@@ -34,6 +34,8 @@ using namespace std;
 struct PartitionList {
 	std::string Display_Name;
 	std::string Mount_Point;
+	std::string Backup_Name;
+	std::string DM_Backup_Name;
 	unsigned int selected;
 	unsigned int dmrestore;
 };
@@ -67,6 +69,7 @@ struct PartitionSettings {                                                    //
 	TWPartition* Part;                                                        // Partition to pass to the partition backup loop
 	std::string Backup_Folder;                                                // Path to restore folder
 	std::string backup_path;                                                // Path to restore folder
+	std::string backup_name;                                                // Path to restore folder
 	bool adbbackup;                                                           // tell the system we are backing up over adb
 	bool adb_compression;                                                     // 0 == uncompressed, 1 == compressed
 	bool generate_digest;                                                      // tell system to create digest for partitions
@@ -234,6 +237,7 @@ private:
 	string Backup_Name;                                                       // Backup name -- used for backup filenames
 	string Storage_Name;                                                      // Name displayed in the partition list for storage selection
 	string Backup_FileName;                                                   // Actual backup filename
+	string DM_Backup_FileName;                                                // Actual backup filename for data/media
 	Backup_Method_enum Backup_Method;                                         // Method used for backup
 	bool Can_Encrypt_Backup;                                                  // Indicates if this item can be encrypted during backup
 	bool Use_Userdata_Encryption;                                             // Indicates if we will use userdata encryption splitting on an encrypted backup
