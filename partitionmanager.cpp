@@ -1150,8 +1150,8 @@ int TWPartitionManager::Run_Restore(const string& Restore_Name) {
                                     DataManager::SetValue("tw_cur_backup_name", PartR->DM_Backup_Name);
                                     LOGINFO("sfxdebug wow restorepath before restore partition: %s\n", PartR->DM_Backup_Name.c_str());
                                 } else {
-                                    DataManager::SetValue("tw_cur_backup_name", PartR->Backup_Name);
-                                    LOGINFO("sfxdebug lol restorepath before restore partition: %s\n", part_settings.Part->Backup_Name.c_str());
+                                    DataManager::SetValue("tw_cur_backup_name", restore_path);
+                                    LOGINFO("sfxdebug lol restorepath before restore partition: %s\n", restore_path.c_str());
                                 } 
 				if (!Restore_Partition(&part_settings))
 					return false;

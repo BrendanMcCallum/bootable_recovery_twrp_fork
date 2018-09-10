@@ -2394,6 +2394,7 @@ bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_p
 	    tar.partition_name = DM_Backup_Name;
 	    tar.setdir(DM_Backup_Path);
 	    tar.setsize(DM_Backup_Size);
+	    gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any of your apps and e.g. android settings.")(Display_Name));
         } else {
             LOGINFO("sfxdebug backup name: %s\n", Backup_Name.c_str());
 	    Backup_FileName = Backup_Name + "." + Current_File_System + ".win";
@@ -2401,7 +2402,8 @@ bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_p
 	    ExcludeAll(Mount_Point + "/media");
 	    tar.setdir(Backup_Path);
 	    tar.setsize(Backup_Size);
-	    gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any files in internal storage such as pictures or downloads.")(Display_Name));
+            if (part_settings->backup_path == "/data")
+	        gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any files in internal storage such as pictures or downloads.")(Display_Name));
         }
         LOGINFO("Backup Filename: %s\n", Backup_FileName.c_str());
 	Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
