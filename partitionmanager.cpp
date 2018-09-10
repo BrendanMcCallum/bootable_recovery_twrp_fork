@@ -2205,7 +2205,7 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 					}
 				}
                                 LOGINFO("sfxdebug before prepare dm flags\n");
-                                if ((*iter)->Has_Data_Media) {
+                                if ((*iter)->Has_Data_Media && incl_dm_bak == 1) {
                                     LOGINFO("sfxdebug preparing backup list with special DM flags\n");
     				    sprintf(backup_size, "%llu", (*iter)->DM_Backup_Size / 1024 / 1024);
 				    part.Display_Name = (*iter)->DM_Backup_Display_Name + " (";
@@ -2228,9 +2228,8 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 		string Restore_List, restore_path;
 		TWPartition* restore_part = NULL;
 
-                DataManager::SetValue("tw_restore_datamedia", 0);
+                DataManager::SetValue("tw_restore_datamedia", 0); // sfxdebug: must be checked if still needed after rewrite
 		DataManager::GetValue("tw_restore_list", Restore_List);
-                DataManager::GetValue("tw_backup_has_datamedia", dm_in_backup);
 
 		if (!Restore_List.empty()) {
 			size_t start_pos = 0, end_pos = Restore_List.find(";", start_pos);
@@ -2246,9 +2245,12 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 				}
 
 				if ((restore_part = Find_Partition_By_Path(restore_path)) != NULL) {
-					if ((restore_part->Backup_Name == "recovery" && !restore_part->Can_Be_Backed_Up) || restore_part->Is_SubPartition) {
+                                        //if (restore_path == restore_part->DM_Backup_Path && incl_dm_bak == 0) // skip datamedia restore when user setting is off
+                                        //    break;
+					if ((restore_part->Backup_Name == "recovery" && !restore_part->Can_Be_Backed_Up) || restore_part->Is_SubPartition || (restore_path == restore_part->DM_Backup_Path && incl_dm_bak == 0)) {
 						// Don't allow restore of recovery (causes problems on some devices)
 						// Don't add subpartitions to the list of items
+                                                // skip datamedia restore when user setting is off
 					} else {
                                                 if (restore_path == restore_part->DM_Backup_Path) {
 						    part.Display_Name = restore_part->DM_Backup_Display_Name;

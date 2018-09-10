@@ -2389,12 +2389,12 @@ bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_p
 
         if (part_settings->backup_path == "/data/media"){
             LOGINFO("sfxdebug backup name: %s\n", DM_Backup_Name.c_str());
-	    Backup_FileName = DM_Backup_Name + "." + Current_File_System + ".win";
+	    Backup_FileName = DM_Backup_Name + ".vfat.win";
 	    backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
 	    tar.partition_name = DM_Backup_Name;
 	    tar.setdir(DM_Backup_Path);
 	    tar.setsize(DM_Backup_Size);
-	    gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any of your apps and e.g. android settings.")(Display_Name));
+	    gui_msg(Msg(msg::kWarning, "datamedia_backup_storage_warning=Backups of {1} do not include any of your apps and e.g. android settings.")(DM_Backup_Display_Name));
         } else {
             LOGINFO("sfxdebug backup name: %s\n", Backup_Name.c_str());
 	    Backup_FileName = Backup_Name + "." + Current_File_System + ".win";
@@ -2648,7 +2648,7 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
                 LOGINFO("Skipping wipe of Internal Storage.\n");
             } else {
 		gui_msg(Msg("wiping=Wiping {1}")(Backup_Display_Name));
-		if (Has_Data_Media && Mount_Point == "/data" && Restore_File_System != Current_File_System) {
+		if (Has_Data_Media && Mount_Point == "/data" && Restore_File_System != Current_File_System && cur_backup_name != "datamedia") {
 			gui_msg(Msg(msg::kWarning, "datamedia_fs_restore=WARNING: This /data backup was made with {1} file system! The backup may not boot unless you change back to {1}.")(Restore_File_System));
 			if (!Wipe_Data_Without_Wiping_Media())
 				return false;
@@ -2670,51 +2670,42 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 	if (!ReMount_RW(true))
 		return false;
 
-        Backup_Name = cur_backup_name;
-        //if (cur_backup_name == "datamedia"){
-	    //Backup_FileName = DM_Backup_Name + "." + Current_File_System + ".win";
-            //Backup_Name = DM_Backup_Name;
-        LOGINFO("sfxdebug backup name: %s\n", Backup_Name.c_str());
-        //}
+        string Tar_Backup_Name = cur_backup_name;
+        LOGINFO("sfxdebug restore backup name: %s\n", Tar_Backup_Name.c_str());
+
+	twrpTar tar;
+
+        if (cur_backup_name == "datamedia"){
+            LOGINFO("sfxdebug datamedia restore name: %s\n", DM_Backup_Name.c_str());
+	    Backup_FileName = DM_Backup_Name + ".vfat.win";
+	    backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in restore
+	    //tar.partition_name = DM_Backup_Name;
+	    tar.setdir(DM_Backup_Path);
+	    tar.setsize(DM_Backup_Size);
+	    tar.backup_name = DM_Backup_Name;
+	    gui_msg(Msg(msg::kWarning, "datamedia_backup_storage_warning=Backups of {1} do not include any of your apps and e.g. android settings.")(DM_Backup_Display_Name));
+        } else {
+            LOGINFO("sfxdebug regular restore name: %s\n", Backup_Name.c_str());
+	    Backup_FileName = Backup_Name + "." + Current_File_System + ".win";
+	    //tar.partition_name = Backup_Name;
+	    ExcludeAll(Mount_Point + "/media");
+	    tar.setdir(Backup_Path);
+	    tar.setsize(Backup_Size);
+	    tar.backup_name = Backup_Name;
+            if (part_settings->backup_path == "/data")
+	        gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any files in internal storage such as pictures or downloads.")(Display_Name));
+        }
+        LOGINFO("Restore Filename: %s\n", Backup_FileName.c_str());
 
 	Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
-	twrpTar tar;
 	tar.part_settings = part_settings;
-	tar.setdir(Backup_Path);
 	tar.setfn(Full_FileName);
-	tar.backup_name = Backup_Name;
 #ifndef TW_EXCLUDE_ENCRYPTED_BACKUPS
 	string Password;
 	DataManager::GetValue("tw_restore_password", Password);
 	if (!Password.empty())
 		tar.setpassword(Password);
 #endif
-
-        DataManager::GetValue("tw_restore_data_partition", data_set);
-	DataManager::GetValue("tw_restore_datamedia", dm_set);
-        LOGINFO("sfxdebug before excl\n");
-        //ExcludeAll(Mount_Point + "/media"); // data + datamedia
-        LOGINFO("sfxdebug after excl\n");
-
-/**
-	//part_settings->globonly = "false";
-        if (data_set == 1 && dm_set == 1){
-	    LOGINFO("sfxdebug: data+datamedia\n");
-	    //tar.backup_exclusions->clear_absolute_dir(Mount_Point + "/media"); // data + datamedia
-	} else {
-            if (data_set == 1 && dm_set != 1) {
-	        LOGINFO("sfxdebug: data but no datamedia\n");
-	        //tar.backup_exclusions->add_absolute_dir(Mount_Point + "/media"); // data without datamedia
-	    } else {
-                if (data_set != 1 && dm_set == 1){
-	            //tar.backup_exclusions->clear_absolute_dir(Mount_Point + "/media"); // datamedia only
-	            LOGINFO("sfxdebug: ONLY datamedia\n");
-                    DataManager::SetValue("tw_restore_datamedia_only", 1);
-	            //part_settings->globonly = "data/media";
-		}
-	    }
-	}
-**/
 	part_settings->progress->SetPartitionSize(Get_Restore_Size(part_settings));
 	if (tar.extractTarFork() != 0)
 		ret = false;
