@@ -940,11 +940,10 @@ void DataManager::SetDefaultValues()
 #endif
 
         mData.SetValue("tw_enable_adb_backup", "0");
-	//mPersist.SetValue("tw_backup_include_datamedia", TW_BACKUP_INCLUDE_DATA_MEDIA);
-	mPersist.SetValue("tw_backup_include_datamedia", 1);
-    
-	//SetValue("tw_backup_include_datamedia", TW_BACKUP_INCLUDE_DATA_MEDIA);          // needed to make it available on first boot
-	mPersist.SetValue("tw_backup_selected_datamedia", 0);
+
+        LOGINFO("TW_BACKUP_ALLOW_DATA_MEDIA: %d\n", TW_BACKUP_ALLOW_DATA_MEDIA);
+        mPersist.SetValue("tw_backup_include_datamedia", TW_BACKUP_ALLOW_DATA_MEDIA);
+	mPersist.SetValue("tw_backup_selected_datamedia", 0); // sfxdebug re-check if needed after re-write
 
 	pthread_mutex_unlock(&m_valuesLock);
 }
