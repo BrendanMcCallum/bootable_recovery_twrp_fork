@@ -628,7 +628,7 @@ void DataManager::SetDefaultValues()
 		mPersist.SetValue("tw_backupstorage_path", store->Storage_Path);
 	} else {
 		mPersist.SetValue("tw_storage_path", "/");
-		mPersist.SetValue("tw_backupstorage_path", "/");
+		mPersist.SetValue("tw_backupstorage_path", "/data");
 	}
 
 #ifdef TW_FORCE_CPUINFO_FOR_DEVICE_ID
