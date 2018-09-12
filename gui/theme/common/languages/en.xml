@@ -596,6 +596,7 @@
 		<string name="wiping_data">Wiping data without wiping /data/media ...</string>
 		<string name="backing_up">Backing up {1}...</string>
 		<string name="backup_storage_warning">Backups of {1} do not include any files in internal storage such as pictures or downloads.</string>
+		<string name="datamedia_backup_storage_warning">Backups of {1} do not include any of your apps and e.g. Android settings.</string>
 		<string name="backing">Backing Up</string>
 		<string name="backup_size">Backup file size for '{1}' is 0 bytes.</string>
 		<string name="datamedia_fs_restore">WARNING: This /data backup was made with {1} file system! The backup may not boot unless you change back to {1}.</string>
@@ -692,5 +693,16 @@
 		<string name="sha2_chk">Use SHA2 for hashing</string>
 		<string name="unable_set_boot_slot">Error changing bootloader boot slot to {1}</string>
 		<string name="incl_media_backup_chk">Include internal storage in backup/restore</string>
+		<string name="overwrite_datamedia_hdr">Overwrite Internal Storage</string>
+		<string name="overwrite_datamedia_ptr1">Restoring Internal Storage</string>
+		<string name="overwrite_datamedia_ptr2">will OVERWRITE -ANY- existing personal:</string>
+		<string name="overwrite_datamedia_ptr3">photos,</string>
+		<string name="overwrite_datamedia_ptr4">videos,</string>
+		<string name="overwrite_datamedia_ptr5">downloads,</string>
+		<string name="overwrite_datamedia_ptr6">and any other type of your personal media</string>
+		<string name="overwrite_datamedia_adopted">Including Adopted Storage</string>
+		<string name="overwrite_datamedia_undo">- This can *not* be undone -</string>
+		<string name="overwrite_continue">Type 'overwritemymedia' to continue. Press back to cancel.</string>
+		<string name="overwrite_info">Disable this warning by deselecting Internal Storage in settings.</string>
 	</resources>
 </language>

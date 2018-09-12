@@ -19,7 +19,8 @@
 		<string name="recovery">Recovery</string>
 		<string name="cache">Cache</string>
 		<string name="data">Data</string>
-		<string name="data_backup">Data (escl. archivio)</string>
+		<string name="data_backup">Data (apps, settings only)</string>
+		<string name="datamedia_backup">Internal Storage (photos, videos, ...)</string>
 		<string name="sdcard">Scheda SD</string>
 		<string name="internal">Archivio interno</string>
 		<string name="microsd">Scheda Micro SD</string>
@@ -684,5 +685,21 @@
 		<string name="copy_kernel_log">Log del kernel copiato in {1}</string>
 		<string name="include_kernel_log">Includi Log del Kernel</string>
 		<string name="unable_set_boot_slot">Errore nel cambio slot d'avvio del bootloader in {1}</string>
+		<string name="storage_hdr_backup">Storage: %tw_backupstorage_display_name% (%tw_backupstorage_free_size% MB)</string>
+		<string name="sel_storage_list_backup">Select Backup Storage</string>
+		<string name="skip_wiping">Skip wiping internal storage -- /data/media...</string>
+		<string name="datamedia_backup_storage_warning">Backups of {1} do not include any of your apps and e.g. Android settings.</string>
+		<string name="incl_media_backup_chk">Include internal storage in backup/restore</string>
+		<string name="overwrite_datamedia_hdr">Overwrite Internal Storage</string>
+		<string name="overwrite_datamedia_ptr1">Restoring Internal Storage</string>
+		<string name="overwrite_datamedia_ptr2">will OVERWRITE -ANY- existing personal:</string>
+		<string name="overwrite_datamedia_ptr3">photos,</string>
+		<string name="overwrite_datamedia_ptr4">videos,</string>
+		<string name="overwrite_datamedia_ptr5">downloads,</string>
+		<string name="overwrite_datamedia_ptr6">and any other type of your personal media</string>
+		<string name="overwrite_datamedia_adopted">Including Adopted Storage</string>
+		<string name="overwrite_datamedia_undo">- This can *not* be undone -</string>
+		<string name="overwrite_continue">Type 'overwritemymedia' to continue. Press back to cancel.</string>
+		<string name="overwrite_info">Disable this warning by deselecting Internal Storage in settings.</string>
 	</resources>
 </language>
