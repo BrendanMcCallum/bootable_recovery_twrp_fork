@@ -2683,7 +2683,7 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 
         if (cur_backup_name == "datamedia"){
             LOGINFO("sfxdebug datamedia restore name: %s\n", DM_Backup_Name.c_str());
-	    Backup_FileName = DM_Backup_Name + ".vfat.win";
+	    Backup_FileName = DM_Backup_Name + "." + Current_File_System + ".win";
 	    backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in restore
 	    //tar.partition_name = DM_Backup_Name;
 	    tar.setdir(DM_Backup_Path);
