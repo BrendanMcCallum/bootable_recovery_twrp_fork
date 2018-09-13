@@ -2799,18 +2799,18 @@ bool TWPartition::Update_Size(bool Display_Error) {
 
 	if (Has_Data_Media) {
 		if (Mount(Display_Error)) {
-
 		        ExcludeAll(Mount_Point + "/media/0/TWRP/BACKUPS");
 	                DataManager::GetValue("tw_backup_include_datamedia", incl_dm);
                         LOGINFO("sfxdebug tw_backup_include_datamedia is: %d\n",incl_dm);
-                        if (Backup_Name == "data" && !DM_Backup_Path.empty() && incl_dm == 1){
-		            backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
+                        if (Backup_Name == "data" && !DM_Backup_Path.empty()){
+                            if (incl_dm == 1)
+		                backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
 			    LOGINFO("sfxdebug trying to get folder size of: %s\n", DM_Backup_Path.c_str());
 			    Used = backup_exclusions.Get_Folder_Size(DM_Backup_Path);
 			    DM_Backup_Size = Used;
 			    int bak = (int)(Used / 1048576LLU);
 			    int fre = (int)(Free / 1048576LLU);
-			    LOGINFO("DataMedia backup size is %iMB, free: %iMB.\n", bak, fre);
+			    LOGINFO("Internal Storage backup size is %iMB, free: %iMB.\n", bak, fre);
                         }
 
 		        ExcludeAll(Mount_Point + "/media");
