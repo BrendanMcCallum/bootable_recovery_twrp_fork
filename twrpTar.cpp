@@ -700,8 +700,6 @@ int twrpTar::Generate_TarList(string Path, std::vector<TarListStruct> *TarList, 
 
 int twrpTar::extractTar() {
 	char* charRootDir = (char*) tardir.c_str();
-        //int dm_only = 0;
-        //DataManager::GetValue("tw_restore_datamedia_only", dm_only);
 
 	if (openTar() == -1)
 		return -1;

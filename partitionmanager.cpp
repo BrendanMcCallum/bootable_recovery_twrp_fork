@@ -455,7 +455,7 @@ void TWPartitionManager::Output_Partition(TWPartition* Part) {
 	if (!Part->DM_Backup_Display_Name.empty())
 		printf("   DM_Backup_Display_Name: %s\n", Part->DM_Backup_Display_Name.c_str());
 	if (Part->DM_Backup_Size && Part->Backup_Name == "data")
-		printf("   DM_Backup_Size: %lld\n", Part->DM_Backup_Size);
+		printf("   DM_Backup_Size: %lld MB\n", Part->DM_Backup_Size / mb);
 	if (!Part->Backup_FileName.empty())
 		printf("   Backup_FileName: %s\n", Part->Backup_FileName.c_str());
 	if (!Part->Storage_Path.empty())
@@ -1067,13 +1067,6 @@ int TWPartitionManager::Run_Restore(const string& Restore_Name) {
 			restore_path = Restore_List.substr(start_pos, end_pos - start_pos);
                         TWPartition* PartD = Find_Partition_By_Path(restore_path);
                         LOGINFO("sfxdebug restore_path: %s\n", restore_path.c_str());
-
-                        if (restore_path.compare("/data") == 0)  // sfxdebug: must be re-checked bc of the re-write
-                            DataManager::SetValue("tw_restore_data_partition", 1);
-
-                        if (restore_path.compare("/data/media") == 0)   // sfxdebug: must be re-checked bc of the re-write
-                            DataManager::SetValue("tw_restore_datamedia", 1);
-
 			part_settings.Part = Find_Partition_By_Path(restore_path);
 
 			if (part_settings.Part != NULL) {
@@ -1580,7 +1573,6 @@ void TWPartitionManager::Update_System_Details(void) {
 				DataManager::SetValue(TW_BACKUP_SYSTEM_SIZE, backup_display_size);
 			} else if ((*iter)->Mount_Point == "/data" || (*iter)->Mount_Point == "/datadata") {
 				data_size += (int)((*iter)->Backup_Size / 1048576LLU);
-				//data_size += (int)((*iter)->DM_Backup_Size / 1048576LLU);
 			} else if ((*iter)->Mount_Point == "/cache") {
 				int backup_display_size = (int)((*iter)->Backup_Size / 1048576LLU);
 				DataManager::SetValue(TW_BACKUP_CACHE_SIZE, backup_display_size);
@@ -2206,7 +2198,7 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 				}
                                 LOGINFO("sfxdebug before prepare dm flags\n");
                                 if ((*iter)->Has_Data_Media && incl_dm_bak == 1) {
-                                    LOGINFO("sfxdebug preparing backup list with special DM flags\n");
+                                    LOGINFO("sfxdebug adding/updating DM_* flags, DM_Backup_Size: %llu\n", (*iter)->DM_Backup_Size);
     				    sprintf(backup_size, "%llu", (*iter)->DM_Backup_Size / 1024 / 1024);
 				    part.Display_Name = (*iter)->DM_Backup_Display_Name + " (";
 				    part.Display_Name += backup_size;
@@ -2228,7 +2220,6 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 		string Restore_List, restore_path;
 		TWPartition* restore_part = NULL;
 
-                DataManager::SetValue("tw_restore_datamedia", 0); // sfxdebug: must be checked if still needed after rewrite
 		DataManager::GetValue("tw_restore_list", Restore_List);
 
 		if (!Restore_List.empty()) {
