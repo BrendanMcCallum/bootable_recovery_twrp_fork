@@ -701,6 +701,10 @@ int twrpTar::Generate_TarList(string Path, std::vector<TarListStruct> *TarList, 
 int twrpTar::extractTar() {
 	char* charRootDir = (char*) tardir.c_str();
 
+        // needed to ensure that a restore do not result in /data/media/media
+        if (strncmp(charRootDir,"/data/media",11) == 0)
+            charRootDir = "/data";
+
 	if (openTar() == -1)
 		return -1;
 
