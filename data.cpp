@@ -943,7 +943,7 @@ void DataManager::SetDefaultValues()
 
         LOGINFO("TW_BACKUP_ALLOW_DATA_MEDIA: %d\n", TW_BACKUP_ALLOW_DATA_MEDIA);
         mPersist.SetValue("tw_backup_include_datamedia", TW_BACKUP_ALLOW_DATA_MEDIA);
-	mPersist.SetValue("tw_backup_selected_datamedia", 0); // sfxdebug re-check if needed after re-write
+	mPersist.SetValue("tw_backup_selected_datamedia", 0); 
 
 	pthread_mutex_unlock(&m_valuesLock);
 }
