@@ -1872,15 +1872,21 @@ string TWPartition::Get_Restore_File_System(PartitionSettings *part_settings) {
         string cur_backup_name;
         DataManager::GetValue("tw_cur_backup_name", cur_backup_name);
 
-        //if (cur_backup_name == "datamedia")
-
+        LOGINFO("sfxdebug Backup FileName is: %s\n",DM_Backup_FileName.c_str());
 	// Parse backup filename to extract the file system before wiping
-	first_period = Backup_FileName.find(".");
+        if (cur_backup_name == "datamedia")
+            first_period = DM_Backup_FileName.find(".");
+        else
+            first_period = Backup_FileName.find(".");
+
 	if (first_period == string::npos) {
 		LOGERR("Unable to find file system (first period).\n");
 		return string();
 	}
-	Restore_File_System = Backup_FileName.substr(first_period + 1, Backup_FileName.size() - first_period - 1);
+        if (cur_backup_name == "datamedia")
+	    Restore_File_System = DM_Backup_FileName.substr(first_period + 1, DM_Backup_FileName.size() - first_period - 1);
+        else
+            Restore_File_System = Backup_FileName.substr(first_period + 1, Backup_FileName.size() - first_period - 1);
 	second_period = Restore_File_System.find(".");
 	if (second_period == string::npos) {
 		LOGERR("Unable to find file system (second period).\n");
@@ -2392,7 +2398,7 @@ bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_p
 	    Backup_FileName = DM_Backup_Name + ".vfat.win";
 	    backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
 	    tar.partition_name = DM_Backup_Name;
-	    tar.setdir(DM_Backup_Path);
+	    tar.setdir(DM_Backup_Path);    // ensure we restore in the correct root dir
 	    tar.setsize(DM_Backup_Size);
 	    gui_msg(Msg(msg::kWarning, "datamedia_backup_storage_warning=Backups of {1} do not include any of your apps and e.g. android settings.")(DM_Backup_Display_Name));
         } else {
