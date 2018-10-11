@@ -426,6 +426,7 @@ int twrpTar::createTarFork(pid_t *tar_fork_pid) {
 		// Parent side
 		unsigned long long fs, size_backup = 0, files_backup = 0, file_count = 0;
 		int first_data = 0;
+		int incl_dm = 0;
 
 		// Parent closes output side
 		close(progress_pipe[1]);
@@ -699,9 +700,15 @@ int twrpTar::Generate_TarList(string Path, std::vector<TarListStruct> *TarList, 
 
 int twrpTar::extractTar() {
 	char* charRootDir = (char*) tardir.c_str();
+
+        // needed to ensure that a restore do not result in /data/media/media
+        if (strncmp(charRootDir,"/data/media",11) == 0)
+            charRootDir = "/data";
+
 	if (openTar() == -1)
 		return -1;
-	if (tar_extract_all(t, charRootDir, &progress_pipe_fd) != 0) {
+
+    	if (tar_extract_all(t, charRootDir, &progress_pipe_fd) != 0) {
 		LOGINFO("Unable to extract tar archive '%s'\n", tarfn.c_str());
 		gui_err("restore_error=Error during restore process.");
 		return -1;

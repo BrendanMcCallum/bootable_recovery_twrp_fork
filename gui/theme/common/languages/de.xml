@@ -19,7 +19,8 @@
 		<string name="recovery">Recovery</string>
 		<string name="cache">Cache</string>
 		<string name="data">Data</string>
-		<string name="data_backup">Data (ohne /data/media)</string>
+		<string name="data_backup">Data (Apps, Einstellungen, ...)</string>
+		<string name="datamedia_backup">Interner Speicher (Fotos, Videos, ...)</string>
 		<string name="sdcard">SD-Karte</string>
 		<string name="internal">Interner Speicher</string>
 		<string name="microsd">Micro SD-Karte</string>
@@ -589,7 +590,8 @@
 		<string name="remove_all">Entferne alle Dateien unter '{1}'</string>
 		<string name="wiping_data">Lösche Daten, aber verschone internen Speicher...</string>
 		<string name="backing_up">Sichere {1}...</string>
-		<string name="backup_storage_warning">Backups of {1} do not include any files in internal storage such as pictures or downloads.</string>
+		<string name="backup_storage_warning">Sicherungen von {1} enthalten keine Dateien des Internen Speichers wie z.B. Fotos oder Downloads.</string>
+		<string name="datamedia_backup_storage_warning">Sicherungen von {1} enthalten keine Apps und z.B. auch keine Android Einstellungen.</string>
 		<string name="backing">Sichere</string>
 		<string name="backup_size">Sicherung von '{1}' hat 0 Byte.</string>
 		<string name="datamedia_fs_restore">WARNUNG: Diese Sicherung wurde mit dem Dateisystem {1} erstellt! Es kann sein, dass wieder zu {1} gewechselt werden muss, damit das Gerät nach der Wiederherstellung auch startet.</string>
@@ -684,5 +686,18 @@
 		<string name="copy_kernel_log">Kernel-Log wurde nach {1} kopiert</string>
 		<string name="include_kernel_log">Zusätzlich Kernel-Log kopieren</string>
 		<string name="unable_set_boot_slot">Fehler während Wechsel zu Slot {1}</string>
+		<string name="incl_media_backup_chk">Beziehe den Internen Speicher in backup/restore ein</string>
+		<string name="overwrite_datamedia_hdr">Überschreiben des Internen Speichers</string>
+		<string name="overwrite_datamedia_ptr1">Die Wiederherstellung des Internen Speichers</string>
+		<string name="overwrite_datamedia_ptr2">wird -JEGLICHE- persönliche:</string>
+		<string name="overwrite_datamedia_ptr3">Fotos,</string>
+		<string name="overwrite_datamedia_ptr4">Videos,</string>
+		<string name="overwrite_datamedia_ptr5">Downloads,</string>
+		<string name="overwrite_datamedia_ptr6">und alle anderen persönlichen Medien ÜBERSCHREIBEN</string>
+		<string name="overwrite_datamedia_undo">- Dies kann *nicht* mehr rückgängig gemacht werden! -</string>
+		<string name="overwrite_datamedia_adopted">betrifft auch die eingegliederte Storage-Partition</string>
+		<string name="overwrite_continue">Schreibe 'overwritemymedia' oder drücke Zurück um abzubrechen.</string>
+		<string name="overwrite_info">Verhindere diese Warnung durch abwählen des Internen Speichers in den Einstellungen</string>
+         <string name="sel_storage_list_backup">Sicherungs-Speicher auswählen</string>
 	</resources>
 </language>

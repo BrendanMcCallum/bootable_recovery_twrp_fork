@@ -19,7 +19,8 @@
 		<string name="recovery">Recovery</string>
 		<string name="cache">Cache</string>
 		<string name="data">Data</string>
-		<string name="data_backup">Data (excl. storage)</string>
+		<string name="data_backup">Data (apps, settings only)</string>
+		<string name="datamedia_backup">Internal Storage (photos, videos, ...)</string>
 		<string name="sdcard">SD card</string>
 		<string name="internal">Internal Storage</string>
 		<string name="microsd">Micro SD card</string>
@@ -206,6 +207,7 @@
 		<string name="swipe_factory_reset">Swipe to Factory Reset</string>
 		<string name="repair_change_btn">Repair or Change File System</string>
 		<string name="storage_hdr">Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
+		<string name="storage_hdr_backup">Storage: %tw_backupstorage_display_name% (%tw_backupstorage_free_size% MB)</string>
 		<string name="backup_hdr">Backup</string>
 		<string name="backup_confirm_hdr">Confirm Backup</string>
 		<string name="encryption_tab">ENCRYPTION</string>
@@ -479,6 +481,7 @@
 		<string name="reboot_hdr">Reboot</string>
 		<string name="install_cancel">Do Not Install</string>
 		<string name="sel_storage_list">Select Storage</string>
+		<string name="sel_storage_list_backup">Select Backup Storage</string>
 		<string name="ok_btn">OK</string>
 
 		<!-- Various console messages - these consist of user displayed messages, oftentimes errors -->
@@ -537,6 +540,7 @@
 		<string name="no_andsec">No android secure partitions found.</string>
 		<string name="unable_to_locate">Unable to locate {1}.</string>
 		<string name="wiping_datamedia">Wiping internal storage -- /data/media...</string>
+		<string name="skip_wiping">Skip wiping internal storage -- /data/media...</string>
 		<string name="unable_to_mount">Unable to mount {1}</string>
 		<string name="unable_to_mount_internal">Unable to mount internal_storage</string>
 		<string name="unable_to_mount_storage">Unable to mount storage</string>
@@ -592,6 +596,7 @@
 		<string name="wiping_data">Wiping data without wiping /data/media ...</string>
 		<string name="backing_up">Backing up {1}...</string>
 		<string name="backup_storage_warning">Backups of {1} do not include any files in internal storage such as pictures or downloads.</string>
+		<string name="datamedia_backup_storage_warning">Backups of {1} do not include any of your apps and e.g. Android settings.</string>
 		<string name="backing">Backing Up</string>
 		<string name="backup_size">Backup file size for '{1}' is 0 bytes.</string>
 		<string name="datamedia_fs_restore">WARNING: This /data backup was made with {1} file system! The backup may not boot unless you change back to {1}.</string>
@@ -687,5 +692,17 @@
 		<string name="include_kernel_log">Include Kernel Log</string>
 		<string name="sha2_chk">Use SHA2 for hashing</string>
 		<string name="unable_set_boot_slot">Error changing bootloader boot slot to {1}</string>
+		<string name="incl_media_backup_chk">Include internal storage in backup/restore</string>
+		<string name="overwrite_datamedia_hdr">Overwrite Internal Storage</string>
+		<string name="overwrite_datamedia_ptr1">Restoring Internal Storage</string>
+		<string name="overwrite_datamedia_ptr2">will OVERWRITE -ANY- existing personal:</string>
+		<string name="overwrite_datamedia_ptr3">photos,</string>
+		<string name="overwrite_datamedia_ptr4">videos,</string>
+		<string name="overwrite_datamedia_ptr5">downloads,</string>
+		<string name="overwrite_datamedia_ptr6">and any other type of your personal media</string>
+		<string name="overwrite_datamedia_adopted">Including Adopted Storage</string>
+		<string name="overwrite_datamedia_undo">- This can *not* be undone -</string>
+		<string name="overwrite_continue">Type 'overwritemymedia' to continue. Press back to cancel.</string>
+		<string name="overwrite_info">Disable this warning by deselecting Internal Storage in settings.</string>
 	</resources>
 </language>

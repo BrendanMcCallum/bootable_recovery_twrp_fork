@@ -1550,7 +1550,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@storage_hdr_backup=Storage: %tw_backupstorage_display_name% (%tw_backupstorage_free_size% MB)}</text>
 			</text>
 
 			<template name="tabs_backup"/>
@@ -1625,6 +1625,8 @@
 				<placement x="%indent%" y="%row18a_y%"/>
 				<text>{@select_storage_btn=Select Storage}</text>
 				<actions>
+					<action function="set">tw_updatebackupstorage=true</action>
+					<action function="set">tw_hide_datamedia=true</action>
 					<action function="set">tw_back=backup</action>
 					<action function="overlay">select_storage</action>
 				</actions>
@@ -1641,16 +1643,22 @@
 
 			<slider>
 				<text>{@swipe_backup=Swipe to Backup}</text>
+				<action function="set">tw_updatebackupstorage=false</action>
+				<action function="set">tw_hide_datamedia=false</action>
 				<action function="page">backup_run</action>
 			</slider>
 
 			<action>
 				<touch key="home"/>
+				<action function="set">tw_updatebackupstorage=false</action>
+				<action function="set">tw_hide_datamedia=false</action>
 				<action function="page">main</action>
 			</action>
 
 			<action>
 				<touch key="back"/>
+				<action function="set">tw_updatebackupstorage=false</action>
+				<action function="set">tw_hide_datamedia=false</action>
 				<action function="page">main</action>
 			</action>
 		</page>
@@ -1665,7 +1673,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@storage_hdr_backup=Storage: %tw_backupstorage_display_name% (%tw_backupstorage_free_size% MB)}</text>
 			</text>
 
 			<template name="tabs_backup"/>
@@ -1792,7 +1800,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@storage_hdr_backup=Storage: %tw_backupstorage_display_name% (%tw_backupstorage_free_size% MB)}</text>
 			</text>
 
 			<template name="tabs_backup"/>
@@ -1908,7 +1916,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@storage_hdr_backup=Storage: %tw_backupstorage_display_name% (%tw_backupstorage_free_size% MB)}</text>
 			</text>
 
 			<template name="tabs_backup"/>
@@ -2016,7 +2024,7 @@
 
 			<text style="text_m">
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>{@storage_hdr=Storage: %tw_storage_display_name% (%tw_storage_free_size% MB)}</text>
+				<text>{@storage_hdr_backup=Storage: %tw_backupstorage_display_name% (%tw_backupstorage_free_size% MB)}</text>
 			</text>
 
 			<template name="tabs_backup"/>
@@ -2454,7 +2462,7 @@
 
 			<slider>
 				<text>{@swipe_restore=Swipe to Restore}</text>
-				<action function="page">restore_run</action>
+				<action function="page">restore_select_read</action>
 			</slider>
 
 			<action>
@@ -2540,6 +2548,129 @@
 				<action function="page">restore_select</action>
 			</action>
 		</page>
+
+                <page name="restore_select_read">
+                        <action>
+                                <condition var1="tw_backup_include_datamedia" var2="1"/>
+                                <actions>
+                                        <action function="page">overwritedatamedia</action>
+                                </actions>
+                        </action>
+
+                        <action>
+                                <condition var1="tw_backup_include_datamedia" var2="0"/>
+                                <actions>
+                                        <action function="page">restore_run</action>
+                                </actions>
+                        </action>
+                </page>
+
+                <page name="overwritedatamedia">
+                        <template name="page"/>
+
+                        <text style="text_l">
+                                <placement x="%col1_x_header%" y="%row3_header_y%"/>
+                                <text>{@restore_hdr=Restore}</text>
+                        </text>
+
+                        <text style="text_m">
+                                <placement x="%col1_x_header%" y="%row4_header_y%"/>
+                                <text>{@overwrite_datamedia_hdr=Overwrite Internal Storage}</text>
+                        </text>
+
+                        <text style="text_m_fail">
+                                <placement x="%center_x%" y="%row2_y%" placement="5"/>
+                                <text>{@overwrite_datamedia_ptr1=Restoring Internal Storage}</text>
+                        </text>
+
+                        <text style="text_m_fail">
+                                <placement x="%center_x%" y="%row3_y%" placement="5"/>
+                                <text>{@overwrite_datamedia_ptr2=will OVERWRITE -ANY- existing personal:}</text>
+                        </text>
+
+                        <text style="text_m_fail">
+                                <placement x="%center_x%" y="%row4_y%" placement="5"/>
+                                <text>{@overwrite_datamedia_ptr3=photos,}</text>
+                        </text>
+
+                        <text style="text_m_fail">
+                                <placement x="%center_x%" y="%row5_y%" placement="5"/>
+                                <text>{@overwrite_datamedia_ptr4=videos,}</text>
+                        </text>
+
+                        <text style="text_m_fail">
+                                <placement x="%center_x%" y="%row6_y%" placement="5"/>
+                                <text>{@overwrite_datamedia_ptr5=downloads,}</text>
+                        </text>
+
+                        <text style="text_m_fail">
+                                <placement x="%center_x%" y="%row7_y%" placement="5"/>
+                                <text>{@overwrite_datamedia_ptr6=and any other type of your personal media}</text>
+                        </text>
+
+                        <text style="text_m_fail">
+                                <condition var1="tw_has_adopted_storage" var2="1"/>
+                                <placement x="%center_x%" y="%row8_y%" placement="5"/>
+                                <text>{@overwrite_datamedia_adopted=Including Adopted Storage}</text>
+                        </text>
+
+                        <text style="text_m">
+                                <placement x="%center_x%" y="%row9_y%" placement="5"/>
+                                <text>{@overwrite_datamedia_undo=- This can *not* be undone -}</text>
+                        </text>
+
+                        <text style="text_m">
+                                <placement x="%center_x%" y="%row10_y%" placement="5"/>
+                                <text>{@overwrite_continue=Type 'overwritemymedia' to continue. Press back to cancel.}</text>
+                        </text>
+
+                        <input>
+                                <placement x="%indent%" y="%row11_y%" w="%content_width%" h="%input_height%"/>
+                                <text>%tw_confirm_overwrite_datamedia%</text>
+                                <data name="tw_confirm_overwrite_datameda"/>
+                                <restrict minlen="16" maxlen="16" allow="overwritemymedia"/>
+                                <action function="page">overwrite_datamedia_confirm</action>
+                        </input>
+
+                        <fill color="%accent_color%">
+                                <placement x="%indent%" y="row12_y" w="%content_width%" h="input_line_width"/>
+                        </fill>
+
+                        <text style="text_m">
+                                <placement x="%center_x%" y="%row13_y%" placement="5"/>
+                                <text>{@overwrite_info=Disable this warning by deselecting Internal Storage in settings.}</text>
+                        </text>
+
+                        <template name="keyboardtemplate"/>
+
+                        <action>
+                                <touch key="home"/>
+                                <action function="page">main</action>
+                        </action>
+
+                        <action>
+                                <touch key="back"/>
+                                <action function="page">restore_select</action>
+                        </action>
+
+                </page>
+
+                <page name="overwrite_datamedia_confirm">
+                        <action>
+                                <touch key="home"/>
+                                <action function="page">main</action>
+                        </action>
+
+                        <action>
+                                <touch key="back"/>
+                                <action function="page">restore_select</action>
+                        </action>
+
+                        <action>
+                                <condition var1="tw_confirm_formatdata" op="!=" var2="overwritemymedia"/>
+                                <action function="page">restore_run</action>
+                        </action>
+                </page>
 
 		<page name="restore_run">
 			<template name="page"/>
@@ -3066,6 +3197,9 @@
 			<listbox style="scrolllist">
 				<placement x="%indent%" y="%row3a_y%" w="%content_width%" h="%listbox_settings_height%"/>
 				<icon selected="checkbox_true" unselected="checkbox_false"/>
+				<listitem name="{@incl_media_backup_chk=Include internal storage on backup}">
+                                	<data variable="tw_backup_include_datamedia"/>
+				</listitem>
 				<listitem name="{@zip_sig_chk=Zip signature verification}">
 					<data variable="tw_signed_zip_verify"/>
 				</listitem>
@@ -4746,6 +4880,13 @@
 			<partitionlist style="partitionlist_storage">
 				<text>{@sel_storage_list=Select Storage}</text>
 				<data name="tw_storage_path"/>
+				<listtype name="storage"/>
+			</partitionlist>
+
+			<partitionlist style="partitionlist_storage">
+				<condition var1="tw_updatebackupstorage" op="=" var2="true"/>
+				<text>{@sel_storage_list_backup=Select Backup Storage}</text>
+				<data name="tw_backupstorage_path"/>
 				<listtype name="storage"/>
 			</partitionlist>
 
