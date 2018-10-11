@@ -176,6 +176,9 @@ bool twrpAdbBuFifo::Restore_ADB_Backup(void) {
 	int adb_control_bu_fd, ret = 0;
 	char cmd[512];
 
+        string cur_backup_name;
+        DataManager::GetValue("tw_cur_backup_name", cur_backup_name);
+
 	part_settings.total_restore_size = 0;
 
 	PartitionManager.Mount_All_Storage();
@@ -298,17 +301,32 @@ bool twrpAdbBuFifo::Restore_ADB_Backup(void) {
 					std::string Backup_FileName;
 					std::size_t pos = Restore_Name.find_last_of("/");
 					std::string path = "/" + Restore_Name.substr(pos, Restore_Name.size());
+                                        std::string bak_name = Restore_Name.substr(pos, Restore_Name.size());
 					pos = path.find_first_of(".");
 					path = path.substr(0, pos);
 					if (path.substr(0,1).compare("//")) {
 						path = path.substr(1, path.size());
 					}
+                                        // ensure we use the correct path on internal storage backups
+                                        if (path == "/datamedia") {
+					    part_settings.Part = PartitionManager.Find_Partition_By_Path("/data"); // needed to set DM backup path dynamic
+                                            path = part_settings.Part->DM_Backup_Path; // overwrite the datamedia fake path
+                                            DataManager::SetValue("tw_cur_backup_name", part_settings.Part->DM_Backup_Name);
+                                        } else {
+					    part_settings.Part = PartitionManager.Find_Partition_By_Path(path);
+                                            DataManager::SetValue("tw_cur_backup_name", bak_name);
+                                        }
+                                        LOGINFO("sfxdebug before restorename find: %s\n",path.c_str());
+                                        string moo;
+                                        DataManager::GetValue("tw_cur_backup_name", moo);
+                                        LOGINFO("sfxdebug setting tw_cur_backup_name to: %s\n",moo.c_str());
 
 					pos = Restore_Name.find_last_of("/");
 					Backup_FileName = Restore_Name.substr(pos + 1, Restore_Name.size());
 					pos = Restore_Name.find_last_of("/");
-					part_settings.Part = PartitionManager.Find_Partition_By_Path(path);
-					part_settings.Part->Set_Backup_FileName(Backup_FileName);
+                                        LOGINFO("sfxdebug before set backup fn: %s\n",part_settings.Part->DM_Backup_Path.c_str());
+                                        part_settings.Part->Set_Backup_FileName(Backup_FileName);
+                                        LOGINFO("sfxdebug before set restore files\n");
 					PartitionManager.Set_Restore_Files(path);
 
 					if (path.compare("/system") == 0) {
@@ -324,10 +342,12 @@ bool twrpAdbBuFifo::Restore_ADB_Backup(void) {
 					part_settings.partition_count = partition_count;
 					part_settings.adbbackup = true;
 					part_settings.adb_compression = twimghdr.compressed;
+                                        LOGINFO("sfxdebug before get rest size \n");
 					part_settings.total_restore_size += part_settings.Part->Get_Restore_Size(&part_settings);
 					part_settings.PM_Method = PM_RESTORE;
 					ProgressTracking progress(part_settings.total_restore_size);
 					part_settings.progress = &progress;
+                                        LOGINFO("sfxdebug before resto parttiion\n");
 					if (!PartitionManager.Restore_Partition(&part_settings)) {
 						LOGERR("ADB Restore failed.\n");
 						ret = false;

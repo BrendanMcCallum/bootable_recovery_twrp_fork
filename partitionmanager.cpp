@@ -987,9 +987,16 @@ bool TWPartitionManager::Restore_Partition(PartitionSettings *part_settings) {
         DataManager::GetValue("tw_cur_backup_name", cur_backup_name);
 
 	if (part_settings->adbbackup) {
-		std::string partName = part_settings->Part->Backup_Name + "." + part_settings->Part->Current_File_System + ".win";
+		LOGINFO("sfxdebug in Restore_Partition\n");
+                std::string partName;
+                if (cur_backup_name == "datamedia"){
+            	    partName = part_settings->Part->DM_Backup_Name + "." + part_settings->Part->Current_File_System + ".win";
+		    part_settings->Part->Set_Backup_FileName(part_settings->Part->DM_Backup_Name + "." + part_settings->Part->Current_File_System + ".win");
+                } else {
+                    partName = part_settings->Part->Backup_Name + "." + part_settings->Part->Current_File_System + ".win";
+		    part_settings->Part->Set_Backup_FileName(part_settings->Part->Backup_Name + "." + part_settings->Part->Current_File_System + ".win");
+                }
 		LOGINFO("setting backup name: %s\n", partName.c_str());
-		part_settings->Part->Set_Backup_FileName(part_settings->Part->Backup_Name + "." + part_settings->Part->Current_File_System + ".win");
 	}
 
 	TWFunc::SetPerformanceMode(true);
@@ -1301,6 +1308,7 @@ void TWPartitionManager::Set_Restore_Files(string Restore_Name) {
 	}
 
 	if (adbbackup) {
+                LOGINFO("sfxdebug setting restore_list to adbbackup\n");
 		Restore_List = "ADB_Backup;";
 		adbbackup = false;
 	}

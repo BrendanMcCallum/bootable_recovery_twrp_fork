@@ -1872,6 +1872,8 @@ string TWPartition::Get_Restore_File_System(PartitionSettings *part_settings) {
         string cur_backup_name;
         DataManager::GetValue("tw_cur_backup_name", cur_backup_name);
 
+        // sfxdebug: DM_Backup_FileName ist leer bei adb backup!! --> geht nicht in den manager! das muss woanders vorher sein 
+
         LOGINFO("sfxdebug Backup FileName is: %s\n",DM_Backup_FileName.c_str());
 	// Parse backup filename to extract the file system before wiping
         if (cur_backup_name == "datamedia")
@@ -2579,10 +2581,10 @@ bool TWPartition::Backup_Dump_Image(PartitionSettings *part_settings) {
 }
 
 unsigned long long TWPartition::Get_Restore_Size(PartitionSettings *part_settings) {
+        string cur_backup_name;
+        DataManager::GetValue("tw_cur_backup_name", cur_backup_name);
+        string Full_FileName;
 	if (!part_settings->adbbackup) {
-                string cur_backup_name;
-                DataManager::GetValue("tw_cur_backup_name", cur_backup_name);
-
 		InfoManager restore_info(part_settings->Backup_Folder + "/" + cur_backup_name + ".info");
                 LOGINFO("sfxdebug restore size bla: %s\n", cur_backup_name.c_str());
 		if (restore_info.LoadValues() == 0) {
@@ -2592,8 +2594,12 @@ unsigned long long TWPartition::Get_Restore_Size(PartitionSettings *part_setting
 			}
 		}
 	}
+        if (cur_backup_name == "datamedia")
+	    Full_FileName = part_settings->Backup_Folder + "/" + DM_Backup_FileName;
+        else
+	    Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
 
-	string Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
+        LOGINFO("sfxdebug full filename set to %s\n", Full_FileName.c_str());
 	string Restore_File_System = Get_Restore_File_System(part_settings);
 
 	if (Is_Image(Restore_File_System)) {
