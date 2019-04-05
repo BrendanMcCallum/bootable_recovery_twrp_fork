@@ -270,6 +270,14 @@ int DataManager::LoadValues(const string& filename)
 	} else {
 		SetBackupFolder();
 	}
+	string current_backup = GetCurrentBackupStoragePath();
+	TWPartition* PartB = PartitionManager.Find_Partition_By_Path(current_backup);
+	if (!PartB)
+		PartB = PartitionManager.Get_Default_Storage_Partition();
+	if (PartB && current != PartB->Storage_Path && PartB->Mount(false)) {
+		LOGINFO("LoadValues setting backup storage path to '%s'\n", PartB->Storage_Path.c_str());
+		SetValue("tw_backupstorage_path", PartB->Storage_Path);
+	}
 	return 0;
 }
 
@@ -485,6 +493,9 @@ int DataManager::SetValue(const string& varName, const string& value, const int 
 	if (varName == "tw_storage_path") {
 		SetBackupFolder();
 	}
+	if (varName == "tw_backupstorage_path") {
+                SetBackupStorage(value);
+        }
 	gui_notifyVarChange(varName.c_str(), value.c_str());
 	return 0;
 }
@@ -531,9 +542,34 @@ void DataManager::update_tz_environment_variables(void)
 	tzset();
 }
 
+void DataManager::SetBackupStorage(string Path)
+{
+	char free_space[255];
+        TWPartition* partition = PartitionManager.Find_Partition_By_Path(Path);
+	if (partition != NULL) {
+		sprintf(free_space, "%llu", partition->Free / 1024 / 1024);
+		SetValue("tw_backupstorage_display_name", partition->Storage_Name);
+		SetValue("tw_backupstorage_free_size", free_space);
+		//SetValue("tw_backupstorage_path", partition->Mount_Point); // will loop! as SetValue handles this
+		LOGINFO("Saved new backup storage path: %s\n",  partition->Mount_Point.c_str());
+        } else {
+                if (PartitionManager.Fstab_Processed() != 0) {
+                        LOGINFO("Storage partition '%s' not found\n", Path.c_str());
+                        gui_err("unable_locate_storage=Unable to locate backup storage device.");
+                }
+	}
+}
+
 void DataManager::SetBackupFolder()
 {
 	string str = GetCurrentStoragePath();
+	int updatebackupstorage = 0;
+	GetValue("tw_updatebackupstorage", updatebackupstorage);
+
+	if (updatebackupstorage == 1){
+	    str = GetCurrentBackupStoragePath();
+	    LOGINFO("sfxdebug GetCurrentBackupStoragePath done\n");
+        }
 	TWPartition* partition = PartitionManager.Find_Partition_By_Path(str);
 	str += "/TWRP/BACKUPS/";
 
@@ -544,10 +580,15 @@ void DataManager::SetBackupFolder()
 	LOGINFO("Backup folder set to '%s'\n", str.c_str());
 	SetValue(TW_BACKUPS_FOLDER_VAR, str, 0);
 	if (partition != NULL) {
-		SetValue("tw_storage_display_name", partition->Storage_Name);
 		char free_space[255];
 		sprintf(free_space, "%llu", partition->Free / 1024 / 1024);
-		SetValue("tw_storage_free_size", free_space);
+		if (updatebackupstorage != 1) {
+			LOGINFO("Setting tw_storage_display_name to: %s\n",  partition->Storage_Name.c_str());
+			SetValue("tw_storage_display_name", partition->Storage_Name);
+			SetValue("tw_storage_free_size", free_space);
+		} else {
+			SetValue("tw_backupstorage_path", partition->Storage_Path);
+		}
 		string zip_path, zip_root, storage_path;
 		GetValue(TW_ZIP_LOCATION_VAR, zip_path);
 		if (partition->Has_Data_Media && !partition->Symlink_Mount_Point.empty())
@@ -599,10 +640,13 @@ void DataManager::SetDefaultValues()
 #endif
 
 	TWPartition *store = PartitionManager.Get_Default_Storage_Partition();
-	if (store)
+	if (store) {
 		mPersist.SetValue("tw_storage_path", store->Storage_Path);
-	else
+		mPersist.SetValue("tw_backupstorage_path", store->Storage_Path);
+	} else {
 		mPersist.SetValue("tw_storage_path", "/");
+		mPersist.SetValue("tw_backupstorage_path", "/");
+	}
 
 #ifdef TW_FORCE_CPUINFO_FOR_DEVICE_ID
 	printf("TW_FORCE_CPUINFO_FOR_DEVICE_ID := true\n");
@@ -917,6 +961,10 @@ void DataManager::SetDefaultValues()
 #endif
 
 	mData.SetValue("tw_enable_adb_backup", "0");
+	//mPersist.SetValue("tw_backup_include_datamedia", TW_BACKUP_INCLUDE_DATA_MEDIA);
+	mPersist.SetValue("tw_backup_include_datamedia", 1);
+	//SetValue("tw_backup_include_datamedia", TW_BACKUP_INCLUDE_DATA_MEDIA);          // needed to make it available on first boot
+	mPersist.SetValue("tw_backup_selected_datamedia", 0);
 
 	if (TWFunc::Path_Exists("/sbin/magiskboot"))
 		mConst.SetValue("tw_has_repack_tools", "1");
@@ -1123,6 +1171,11 @@ void DataManager::ReadSettingsFile(void)
 string DataManager::GetCurrentStoragePath(void)
 {
 	return GetStrValue("tw_storage_path");
+}
+
+string DataManager::GetCurrentBackupStoragePath(void)
+{
+	return GetStrValue("tw_backupstorage_path");
 }
 
 string DataManager::GetSettingsStoragePath(void)
