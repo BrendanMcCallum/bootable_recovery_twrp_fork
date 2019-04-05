@@ -1096,13 +1096,22 @@ void TWPartition::Setup_AndSec(void) {
 }
 
 void TWPartition::Setup_Data_Media() {
+	int incl_dm_bak;
+
 	LOGINFO("Setting up '%s' as data/media emulated storage.\n", Mount_Point.c_str());
+	DataManager::GetValue("tw_backup_include_datamedia", incl_dm_bak);
+
 	if (Storage_Name.empty() || Storage_Name == "Data")
 		Storage_Name = "Internal Storage";
 	Has_Data_Media = true;
 	Is_Storage = true;
 	Storage_Path = Mount_Point + "/media";
 	Symlink_Path = Storage_Path;
+
+	DM_Backup_Display_Name = "DataMedia";
+	DM_Backup_Name = "datamedia";
+	DM_Backup_Path = Symlink_Path;
+
 	if (Mount_Point == "/data") {
 		Is_Settings_Storage = true;
 		if (strcmp(EXPAND(TW_EXTERNAL_STORAGE_PATH), "/sdcard") == 0) {
@@ -1117,6 +1126,7 @@ void TWPartition::Setup_Data_Media() {
 			Symlink_Path = Storage_Path;
 			DataManager::SetValue(TW_INTERNAL_PATH, Mount_Point + "/media/0");
 			UnMount(true);
+		        ExcludeAll(Mount_Point + "/media/0/TWRP");
 		}
 		DataManager::SetValue("tw_has_internal", 1);
 		DataManager::SetValue("tw_has_data_media", 1);
@@ -1129,9 +1139,14 @@ void TWPartition::Setup_Data_Media() {
 			Storage_Path = Mount_Point + "/media/0";
 			Symlink_Path = Storage_Path;
 			UnMount(true);
+		        ExcludeAll(Mount_Point + "/media/0/TWRP");
 		}
 	}
+        // sfx: Is that still needed ??? Was needed before the separate datamedia way but now may be obsolete
+	//if (incl_dm_bak == 0) 
 	ExcludeAll(Mount_Point + "/media");
+	//else 
+	//	backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
 }
 
 void TWPartition::Find_Real_Block_Device(string& Block, bool Display_Error) {
@@ -2475,12 +2490,20 @@ void TWPartition::Wipe_Crypto_Key() {
 bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_pid) {
 	string Full_FileName;
 	twrpTar tar;
+	int sel_dm = 0;
 
 	if (!Mount(true))
 		return false;
 
-	TWFunc::GUI_Operation_Text(TW_BACKUP_TEXT, Backup_Display_Name, "Backing Up");
-	gui_msg(Msg("backing_up=Backing up {1}...")(Backup_Display_Name));
+	DataManager::GetValue("tw_backup_selected_datamedia", sel_dm);
+        LOGINFO("sfxdebug bak path: %s\n", part_settings->backup_path.c_str());
+        if (part_settings->backup_path == "/data/media"){
+	    TWFunc::GUI_Operation_Text(TW_BACKUP_TEXT, DM_Backup_Display_Name, "Backing Up");
+	    gui_msg(Msg("backing_up=Backing up {1}...")(DM_Backup_Display_Name));
+        } else {
+	    TWFunc::GUI_Operation_Text(TW_BACKUP_TEXT, Backup_Display_Name, "Backing Up");
+	    gui_msg(Msg("backing_up=Backing up {1}...")(Backup_Display_Name));
+        }
 
 	DataManager::GetValue(TW_USE_COMPRESSION_VAR, tar.use_compression);
 
@@ -2499,16 +2522,27 @@ bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_p
 	}
 #endif
 
-	Backup_FileName = Backup_Name + "." + Current_File_System + ".win";
+        if (part_settings->backup_path == "/data/media"){
+            LOGINFO("sfxdebug backup name: %s\n", DM_Backup_Name.c_str());
+	    Backup_FileName = DM_Backup_Name + "." + Current_File_System + ".win";
+	    backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
+	    tar.partition_name = DM_Backup_Name;
+	    tar.setdir(DM_Backup_Path);
+	    tar.setsize(DM_Backup_Size);
+        } else {
+            LOGINFO("sfxdebug backup name: %s\n", Backup_Name.c_str());
+	    Backup_FileName = Backup_Name + "." + Current_File_System + ".win";
+	    tar.partition_name = Backup_Name;
+	    ExcludeAll(Mount_Point + "/media");
+	    tar.setdir(Backup_Path);
+	    tar.setsize(Backup_Size);
+	    gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any files in internal storage such as pictures or downloads.")(Display_Name));
+        }
+        LOGINFO("Backup Filename: %s\n", Backup_FileName.c_str());
 	Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
-	if (Has_Data_Media)
-		gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any files in internal storage such as pictures or downloads.")(Display_Name));
 	tar.part_settings = part_settings;
 	tar.backup_exclusions = &backup_exclusions;
-	tar.setdir(Backup_Path);
 	tar.setfn(Full_FileName);
-	tar.setsize(Backup_Size);
-	tar.partition_name = Backup_Name;
 	tar.backup_folder = part_settings->Backup_Folder;
 	if (tar.createTarFork(tar_fork_pid) != 0)
 		return false;
@@ -2526,10 +2560,9 @@ bool TWPartition::Backup_Image(PartitionSettings *part_settings) {
 	if (part_settings->adbbackup) {
 		Full_FileName = TW_ADB_BACKUP;
 		adb_file_name  = part_settings->Backup_Folder + "/" + Backup_FileName;
-	}
-	else
+	} else {
 		Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
-
+        }
 	part_settings->total_restore_size = Backup_Size;
 
 	if (part_settings->adbbackup) {
@@ -2708,10 +2741,33 @@ unsigned long long TWPartition::Get_Restore_Size(PartitionSettings *part_setting
 	return Restore_Size;
 }
 
+unsigned long long TWPartition::Get_DataMediaInfo(PartitionSettings *part_settings) {
+	int incl_dm = 0;
+        if (!part_settings->adbbackup) {
+                InfoManager restore_info(part_settings->Backup_Folder + "/" + Backup_Name + ".info");
+                if (restore_info.LoadValues() == 0) {
+                        if (restore_info.GetValue("datamedia", incl_dm) == 0) {
+                                LOGINFO("Read info file, datamedia is %d\n", incl_dm);
+				DataManager::SetValue("tw_backup_has_datamedia", incl_dm);
+                                return incl_dm;
+                        }
+                }
+        }
+	return incl_dm;
+}
+
 bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 	string Full_FileName;
 	bool ret = false;
+	int include_datamedia = 0;
 	string Restore_File_System = Get_Restore_File_System(part_settings);
+        int data_set = 0;
+        int dm_set = 0;
+
+	if (Has_Data_Media && Mount_Point == "/data")
+		include_datamedia = Get_DataMediaInfo(part_settings);
+			
+	LOGINFO("Backup setting data/media include: %d\n", include_datamedia);
 
 	if (Has_Android_Secure) {
 		if (!Wipe_AndSec())
@@ -2746,6 +2802,29 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 	if (!Password.empty())
 		tar.setpassword(Password);
 #endif
+
+        DataManager::GetValue("tw_restore_data_partition", data_set);
+	DataManager::GetValue("tw_restore_datamedia", dm_set);
+        tar.backup_exclusions->add_absolute_dir(Mount_Point + "/media"); // data + datamedia
+
+	//part_settings->globonly = "false";
+        if (data_set == 1 && dm_set == 1){
+	    LOGINFO("sfxdebug: data+datamedia\n");
+	    //tar.backup_exclusions->clear_absolute_dir(Mount_Point + "/media"); // data + datamedia
+	} else {
+            if (data_set == 1 && dm_set != 1) {
+	        LOGINFO("sfxdebug: data but no datamedia\n");
+	        //tar.backup_exclusions->add_absolute_dir(Mount_Point + "/media"); // data without datamedia
+	    } else {
+                if (data_set != 1 && dm_set == 1){
+	            //tar.backup_exclusions->clear_absolute_dir(Mount_Point + "/media"); // datamedia only
+	            LOGINFO("sfxdebug: ONLY datamedia\n");
+                    DataManager::SetValue("tw_restore_datamedia_only", 1);
+	            //part_settings->globonly = "data/media";
+		}
+	    }
+	}
+
 	part_settings->progress->SetPartitionSize(Get_Restore_Size(part_settings));
 	if (tar.extractTarFork() != 0)
 		ret = false;
@@ -2808,6 +2887,7 @@ bool TWPartition::Restore_Image(PartitionSettings *part_settings) {
 
 bool TWPartition::Update_Size(bool Display_Error) {
 	bool ret = false, Was_Already_Mounted = false;
+        int incl_dm = 0;
 
 	Find_Actual_Block_Device();
 
@@ -2838,7 +2918,24 @@ bool TWPartition::Update_Size(bool Display_Error) {
 
 	if (Has_Data_Media) {
 		if (Mount(Display_Error)) {
-			Used = backup_exclusions.Get_Folder_Size(Mount_Point);
+
+		        ExcludeAll(Mount_Point + "/media/0/TWRP/BACKUPS");
+	                DataManager::GetValue("tw_backup_include_datamedia", incl_dm);
+                        LOGINFO("sfxdebug tw_backup_include_datamedia is: %d\n",incl_dm);
+                        if (Backup_Name == "data" && !DM_Backup_Path.empty() && incl_dm == 1){
+		            backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
+			    LOGINFO("sfxdebug trying to get folder size of: %s\n", DM_Backup_Path.c_str());
+			    Used = backup_exclusions.Get_Folder_Size(DM_Backup_Path);
+			    DM_Backup_Size = Used;
+			    int bak = (int)(Used / 1048576LLU);
+			    int fre = (int)(Free / 1048576LLU);
+			    LOGINFO("DataMedia backup size is %iMB, free: %iMB.\n", bak, fre);
+                        }
+
+		        ExcludeAll(Mount_Point + "/media");
+			LOGINFO("sfxdebug trying to get folder size of: %s\n", Mount_Point.c_str());
+                        Used = backup_exclusions.Get_Folder_Size(Mount_Point);
+
 			Backup_Size = Used;
 			int bak = (int)(Used / 1048576LLU);
 			int fre = (int)(Free / 1048576LLU);

@@ -55,6 +55,7 @@ struct PartitionList {
 	std::string Display_Name;
 	std::string Mount_Point;
 	unsigned int selected;
+	unsigned int dmrestore;
 };
 
 struct Uevent_Block_Data {
@@ -98,6 +99,7 @@ class TWPartition;
 struct PartitionSettings {                                                    // Settings for backup session
 	TWPartition* Part;                                                        // Partition to pass to the partition backup loop
 	std::string Backup_Folder;                                                // Path to restore folder
+	std::string backup_path;                                                // Path to restore folder
 	bool adbbackup;                                                           // tell the system we are backing up over adb
 	bool adb_compression;                                                     // 0 == uncompressed, 1 == compressed
 	bool generate_digest;                                                      // tell system to create digest for partitions
@@ -146,6 +148,7 @@ public:
 	bool Backup(PartitionSettings *part_settings, pid_t *tar_fork_pid);       // Backs up the partition to the folder specified
 	bool Restore(PartitionSettings *part_settings);                           // Restores the partition using the backup folder provided
 	unsigned long long Get_Restore_Size(PartitionSettings *part_settings);    // Returns the overall restore size of the backup
+	unsigned long long Get_DataMediaInfo(PartitionSettings *part_settings);   // Returns if the backup included data/media
 	string Backup_Method_By_Name();                                           // Returns a string of the backup method for human readable output
 	bool Decrypt(string Password);                                            // Decrypts the partition, return 0 for failure and -1 for success
 	bool Wipe_Encryption();                                                   // Ignores wipe commands for /data/media devices and formats the original block device
@@ -167,6 +170,9 @@ public:
 	string Current_File_System;                                               // Current file system
 	string Actual_Block_Device;                                               // Actual block device (one of primary, alternate, or decrypted)
 	string Backup_Display_Name;                                               // Name displayed in the partition list for backup selection
+	string DM_Backup_Display_Name;                                            // data/media backup display name
+	string DM_Backup_Name;                                                    // data/media backup name
+	string DM_Backup_Path;                                                    // data/media backup path
 	string MTD_Name;                                                          // Name of the partition for MTD devices
 	bool Is_Present;                                                          // Indicates if the partition is currently present as a block device
 	string Crypto_Key_Location;                                               // Location of the crypto key used for decrypting encrypted data partitions
@@ -252,6 +258,7 @@ private:
 	unsigned long long Used;                                                  // Overall used space
 	unsigned long long Free;                                                  // Overall free space
 	unsigned long long Backup_Size;                                           // Backup size -- may be different than used space especially when /data/media is present
+	unsigned long long DM_Backup_Size;                                        // Backup size -- for just /data/media if present
 	unsigned long long Restore_Size;                                          // Restore size of the current restore operation
 	bool Can_Be_Encrypted;                                                    // This partition might be encrypted, affects error handling, can only be true if crypto support is compiled in
 	bool Is_Encrypted;                                                        // This partition is thought to be encrypted -- it wouldn't mount for some reason, only avialble with crypto support
@@ -321,6 +328,7 @@ public:
 	int Run_Restore(const string& Restore_Name);                              // Restores a backup
 	bool Write_ADB_Stream_Header(uint64_t partition_count);                   // Write ADB header over twrpbu FIFO
 	bool Write_ADB_Stream_Trailer();                                          // Write ADB trailer over twrpbu FIFO
+	void SetDataMediaInfo(string Backup_Folder, string Backup_Label);         // Used to read a backup file's info and set a variable if it includes data/media or not
 	void Set_Restore_Files(string Restore_Name);                              // Used to gather a list of available backup partitions for the user to select for a restore
 	int Wipe_By_Path(string Path);                                            // Wipes a partition based on path
 	int Wipe_By_Path(string Path, string New_File_System);                    // Wipes a partition based on path
