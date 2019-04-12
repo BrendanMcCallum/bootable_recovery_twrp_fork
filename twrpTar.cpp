@@ -426,7 +426,6 @@ int twrpTar::createTarFork(pid_t *tar_fork_pid) {
 		// Parent side
 		unsigned long long fs, size_backup = 0, files_backup = 0, file_count = 0;
 		int first_data = 0;
-		int incl_dm = 0;
 
 		// Parent closes output side
 		close(progress_pipe[1]);
