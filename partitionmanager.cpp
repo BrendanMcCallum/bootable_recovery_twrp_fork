@@ -1198,7 +1198,6 @@ void TWPartitionManager::Set_Restore_Files(string Restore_Name) {
 	string Restore_List;
 	bool get_date = true, check_encryption = true;
 	bool adbbackup = false;
-        int incl_dm = 0;
 
 	DataManager::SetValue("tw_restore_encrypted", 0);
 	if (twadbbu::Check_ADB_Backup_File(Restore_Name)) {
@@ -2152,34 +2151,23 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 			}
 		}
 	} else if (ListType == "storage") {
-                char free_space[255];
-                string Current_Storage = DataManager::GetCurrentStoragePath();
-
-		if (updatebackupstorage == 1) 
-			Current_Storage = DataManager::GetCurrentBackupStoragePath();
-
-                for (iter = Partitions.begin(); iter != Partitions.end(); iter++) {
-                        if ((*iter)->Is_Storage) {
-                            if ((*iter)->Storage_Name == "Internal Storage" && incl_dm_bak == 1 && tw_hidedm == 1 ) {
-                                // hide internal storage if requested
-                            } else {
-                                struct PartitionList part;
-                                sprintf(free_space, "%llu", (*iter)->Free / 1024 / 1024);
-                                part.Display_Name = (*iter)->Storage_Name + " (";
-                                part.Display_Name += free_space;
-                                part.Display_Name += "MB)";
-                                part.Mount_Point = (*iter)->Storage_Path;
-                                if ((*iter)->Storage_Path == Current_Storage) {
-                                        part.selected = 1;
-					if (updatebackupstorage == 1)
-						DataManager::SetBackupStorage(part.Mount_Point);
-				} else {
-                                        part.selected = 0;
-				}
-                                Partition_List->push_back(part);
-                            }
-                        }
-                }
+		char free_space[255];
+		string Current_Storage = DataManager::GetCurrentStoragePath();
+		for (iter = Partitions.begin(); iter != Partitions.end(); iter++) {
+			if ((*iter)->Is_Storage) {
+				struct PartitionList part;
+				sprintf(free_space, "%llu", (*iter)->Free / 1024 / 1024);
+				part.Display_Name = (*iter)->Storage_Name + " (";
+				part.Display_Name += free_space;
+				part.Display_Name += "MB)";
+				part.Mount_Point = (*iter)->Storage_Path;
+				if ((*iter)->Storage_Path == Current_Storage)
+					part.selected = 1;
+				else
+					part.selected = 0;
+				Partition_List->push_back(part);
+			}
+		}
 	} else if (ListType == "backup") {
 		char backup_size[255];
 		unsigned long long Backup_Size;
@@ -2191,7 +2179,7 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 	
 		if (datamedia) {
                 	TWPartition* Dat = Find_Partition_By_Path("/data");
-			TWPartition* Current_Storage = PartitionManager.Find_Partition_By_Path(cur_storage);
+			//TWPartition* Current_Storage = PartitionManager.Find_Partition_By_Path(cur_storage);
                 	if (Dat) {
                         	LOGINFO("Re-evaluate datamedia setting.\n");
                         	Dat->Setup_Data_Media();
@@ -2199,13 +2187,15 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
                 	}
                         DataManager::GetValue("tw_backupstorage_path", stpath);
                         LOGINFO("sfxdebug tw_backupstorage_path: %s\n", stpath.c_str());
-                        LOGINFO("sfxdebug after updatesys: %s\n", Current_Storage->DM_Backup_Name.c_str());
+                        /**
+                        DataManager::GetValue("tw_backup_include_datamedia", incl_dm_bak);
 			if (incl_dm_bak == 1 && Current_Storage->Backup_Name == "data") {
                                 DataManager::SetBackupStorage("/external_sd");
                                 DataManager::SetValue("tw_backupstorage_path", "/external_sd");
 				string New_Storage = DataManager::GetCurrentBackupStoragePath();
                         	LOGINFO("Storage was internal. Reset to: %s\n", New_Storage.c_str());
 			}
+                        **/
 		}
                 DataManager::SetBackupFolder();
                 LOGINFO("sfxdebug after reset storage\n");
@@ -2222,9 +2212,11 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 					}
 				}
                                 LOGINFO("sfxdebug before prepare dm flags\n");
-                                if ((*iter)->Has_Data_Media) {
+                                DataManager::GetValue("tw_backup_include_datamedia", incl_dm_bak);
+                                if ((*iter)->Has_Data_Media && incl_dm_bak == 1) {
                                     LOGINFO("sfxdebug preparing backup list with special DM flags\n");
     				    sprintf(backup_size, "%llu", (*iter)->DM_Backup_Size / 1024 / 1024);
+                                    DM_Backup_Size = (*iter)->DM_Backup_Size;
 				    part.Display_Name = (*iter)->DM_Backup_Display_Name + " (";
 				    part.Display_Name += backup_size;
 			    	    part.Display_Name += "MB)";
