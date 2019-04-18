@@ -149,6 +149,7 @@ public:
 	bool Restore(PartitionSettings *part_settings);                           // Restores the partition using the backup folder provided
 	unsigned long long Get_Restore_Size(PartitionSettings *part_settings);    // Returns the overall restore size of the backup
 	unsigned long long Get_DataMediaInfo(PartitionSettings *part_settings);   // Returns if the backup included data/media
+	void SetDataMediaInfo(string Backup_Folder, string Backup_Label);         // Used to read a backup file's info and set a variable if it includes data/media or not
 	string Backup_Method_By_Name();                                           // Returns a string of the backup method for human readable output
 	bool Decrypt(string Password);                                            // Decrypts the partition, return 0 for failure and -1 for success
 	bool Wipe_Encryption();                                                   // Ignores wipe commands for /data/media devices and formats the original block device

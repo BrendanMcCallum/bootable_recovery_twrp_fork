@@ -2756,6 +2756,17 @@ unsigned long long TWPartition::Get_DataMediaInfo(PartitionSettings *part_settin
 	return incl_dm;
 }
 
+void TWPartition::SetDataMediaInfo(string Backup_Folder, string Backup_Label) {
+        int incl_dm = 0;
+        InfoManager restore_info(Backup_Folder + "/" + Backup_Label + ".info");
+        if (restore_info.LoadValues() == 0) {
+                if (restore_info.GetValue("datamedia", incl_dm) == 0) {
+                        LOGINFO("Read info file, datamedia is %d\n", incl_dm);
+                        DataManager::SetValue("tw_backup_has_datamedia", incl_dm);
+                }
+        }
+}
+
 bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
 	string Full_FileName;
 	bool ret = false;
@@ -2765,8 +2776,10 @@ bool TWPartition::Restore_Tar(PartitionSettings *part_settings) {
         int dm_set = 0;
 
 	if (Has_Data_Media && Mount_Point == "/data")
-		include_datamedia = Get_DataMediaInfo(part_settings);
-			
+            TWPartition::SetDataMediaInfo(part_settings->Backup_Folder, "datamedia");
+	
+        //include_datamedia = Get_DataMediaInfo(part_settings);
+        DataManager::GetValue("tw_backup_has_datamedia", include_datamedia);
 	LOGINFO("Backup setting data/media include: %d\n", include_datamedia);
 
 	if (Has_Android_Secure) {

@@ -1105,8 +1105,10 @@ int TWPartitionManager::Run_Restore(const string& Restore_Name) {
                         if (restore_path.compare("/data") == 0)
                             DataManager::SetValue("tw_restore_data_partition", 1);
 
-                        if (restore_path.compare("/data/media") == 0)
+                        if (restore_path.compare("/data/media/0") == 0) {
                             DataManager::SetValue("tw_restore_datamedia", 1);
+                            TWPartitionManager::SetDataMediaInfo(Restore_Name, "datamedia");
+                        }
 
 			part_settings.Part = Find_Partition_By_Path(restore_path);
 			if (part_settings.Part != NULL) {
