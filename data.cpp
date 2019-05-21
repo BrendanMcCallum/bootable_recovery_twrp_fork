@@ -961,10 +961,14 @@ void DataManager::SetDefaultValues()
 #endif
 
 	mData.SetValue("tw_enable_adb_backup", "0");
-	//mPersist.SetValue("tw_backup_include_datamedia", TW_BACKUP_INCLUDE_DATA_MEDIA);
-	mPersist.SetValue("tw_backup_include_datamedia", 1);
-	//SetValue("tw_backup_include_datamedia", TW_BACKUP_INCLUDE_DATA_MEDIA);          // needed to make it available on first boot
+
+#ifdef TW_BACKUP_INCLUDE_DATA_MEDIA
+        mPersist.SetValue("tw_backup_include_datamedia", 1);
+        mPersist.SetValue("tw_backup_selected_datamedia", 1);
+#else
+	mPersist.SetValue("tw_backup_include_datamedia", 0);
 	mPersist.SetValue("tw_backup_selected_datamedia", 0);
+#endif
 
 	if (TWFunc::Path_Exists("/sbin/magiskboot"))
 		mConst.SetValue("tw_has_repack_tools", "1");
