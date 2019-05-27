@@ -1144,7 +1144,7 @@ void TWPartition::Setup_Data_Media() {
 	}
         // sfx: Is that still needed ??? Was needed before the separate datamedia way but now may be obsolete
 	//if (incl_dm_bak == 0) 
-	ExcludeAll(Mount_Point + "/media");
+	//ExcludeAll(Mount_Point + "/media");
 	//else 
 	//	backup_exclusions.clear_absolute_dir(Mount_Point + "/media"); // enable /data/media in backup
 }
@@ -3315,12 +3315,6 @@ int TWPartition::Decrypt_Adopted() {
 	if (Is_Adopted_Storage) {
 		string Adopted_Block_Device = Alternate_Block_Device + "p2";
 		if (!TWFunc::Path_Exists(Adopted_Block_Device)) {
-			Adopted_Block_Device = Alternate_Block_Device + "2";
-			if (!TWFunc::Path_Exists(Adopted_Block_Device)) {
-				LOGINFO("Adopted block device does not exist\n");
-				goto exit;
-			}
-		}
 		LOGINFO("key file is '%s', block device '%s'\n", Adopted_Key_File.c_str(), Adopted_Block_Device.c_str());
 		char crypto_blkdev[MAXPATHLEN];
 		std::string thekey;
