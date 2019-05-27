@@ -3315,6 +3315,12 @@ int TWPartition::Decrypt_Adopted() {
 	if (Is_Adopted_Storage) {
 		string Adopted_Block_Device = Alternate_Block_Device + "p2";
 		if (!TWFunc::Path_Exists(Adopted_Block_Device)) {
+			Adopted_Block_Device = Alternate_Block_Device + "2";
+			if (!TWFunc::Path_Exists(Adopted_Block_Device)) {
+				LOGINFO("Adopted block device does not exist\n");
+				goto exit;
+			}
+		}
 		LOGINFO("key file is '%s', block device '%s'\n", Adopted_Key_File.c_str(), Adopted_Block_Device.c_str());
 		char crypto_blkdev[MAXPATHLEN];
 		std::string thekey;
